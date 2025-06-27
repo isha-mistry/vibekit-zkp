@@ -17,8 +17,10 @@ import { Swaps } from './Swaps';
 import { Pendle } from './Pendle';
 import { Lending } from './Lending';
 import { Liquidity } from './Liquidity';
+import { Counter } from './Counter';
 import type { Dispatch } from 'react';
 import { TemplateComponent } from './TemplateComponent';
+import { extractCounterTransactionData } from '../lib/counterUtils';
 
 interface MessageRendererProps {
   message: UIMessage;
@@ -126,6 +128,8 @@ export const MessageRenderer = ({
           <Liquidity positions={null} txPreview={null} txPlan={null} pools={null} />
         ) : toolName.endsWith('askYieldTokenizationAgent') ? (
           <Pendle txPreview={null} txPlan={null} markets={[]} isMarketList={false} />
+        ) : toolName.endsWith('askCounterAgent') ? (
+          <Counter txPreview={null} txPlan={null} />
         ) : (
           <TemplateComponent txPreview={null} txPlan={null} />
         )}
@@ -188,6 +192,11 @@ export const MessageRenderer = ({
               isMarketList={getArtifact()?.name === 'yield-markets'}
             />
           )
+        ) : toolName.endsWith('askCounterAgent') ? (
+          toolInvocationResult && (() => {
+            const counterData = extractCounterTransactionData(toolInvocationResult);
+            return <Counter txPreview={counterData.txPreview} txPlan={counterData.txPlan} />;
+          })()
         ) : (
           <TemplateComponent
             txPreview={txPreview}

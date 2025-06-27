@@ -29,6 +29,28 @@ export const chatAgents = [
       },
     ],
   },
+  {
+    id: 'ember-counter' as const,
+    name: 'Counter',
+    description: 'Arbitrum Stylus counter smart contract agent',
+    suggestedActions: [
+      {
+        title: 'Get current',
+        label: 'counter value',
+        action: 'What is the current counter value?',
+      },
+      {
+        title: 'Increment',
+        label: 'the counter',
+        action: 'Increment the counter by 1',
+      },
+      {
+        title: 'Set counter',
+        label: 'to 42',
+        action: 'Set the counter to 42',
+      },
+    ],
+  },
   // {
   //   id: 'langgraph-workflow' as const,
   //   name: 'Greeting Optimizer',
@@ -135,6 +157,7 @@ export const chatAgents = [
 export const DEFAULT_SERVER_URLS = new Map<ChatAgentId, string>([
   ['ember-aave', 'http://lending-agent-no-wallet:3001/sse'],
   ['ember-camelot', 'http://swapping-agent-no-wallet:3005/sse'],
+  ['ember-counter', 'http://counter-agent-no-wallet:3010/sse'],
   // ['langgraph-workflow', 'http://langgraph-workflow-agent:3009/sse'],
   // ['quickstart-agent-template', 'http://quickstart-agent-template:3007/sse'],
   // ['allora-price-prediction-agent', 'http://allora-price-prediction-agent:3008/sse'],

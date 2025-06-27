@@ -27,6 +27,20 @@ services:
       - 3005:3005
     restart: unless-stopped
 
+  counter-agent-no-wallet:
+    build:
+      context: ./
+      dockerfile: examples/counter-agent-no-wallet/Dockerfile
+    container_name: vibekit-counter-agent-no-wallet
+    env_file:
+      - path: .env
+        required: true
+      - path: examples/counter-agent-no-wallet/.env
+        required: false
+    ports:
+      - 3010:3010
+    restart: unless-stopped
+
   # langgraph-workflow-agent:
   #   build:
   #     context: ./
