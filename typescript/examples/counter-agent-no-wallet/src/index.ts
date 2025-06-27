@@ -44,7 +44,7 @@ const initializeAgent = async (): Promise<void> => {
 
 const agentToolName = 'askCounterAgent';
 const agentToolDescription =
-  'Sends a free-form, natural-language instruction to this counter AI agent for interacting with an Arbitrum Stylus counter smart contract. You can get the current counter value, increment it by 1, or set it to a specific number. The agent returns structured responses with transaction details for write operations.';
+  'Sends a free-form, natural-language instruction to this counter AI agent for interacting with an Arbitrum Stylus counter smart contract written in Rust. You can get the current counter value, increment it by 1, set it to a specific number, multiply it by a value, add a value to it, or send ETH to add the wei value to the counter. The agent returns structured responses with transaction details for write operations.';
 
 server.tool(
   agentToolName,

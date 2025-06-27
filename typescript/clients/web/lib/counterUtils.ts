@@ -13,11 +13,15 @@ export interface CounterAgentResponse {
     };
   };
   metadata?: {
-    operation: 'read' | 'increment' | 'set';
+    operation: 'read' | 'increment' | 'set' | 'multiply' | 'add' | 'addFromMsgValue';
     contractAddress: string;
     currentValue: string;
     expectedNewValue?: string;
     newValue?: string;
+    multiplier?: string;
+    addValue?: string;
+    ethValue?: string;
+    ethValueInWei?: string;
     userAddress: string;
     txData?: {
       to: string;
@@ -44,12 +48,21 @@ export function extractCounterTransactionData(response: CounterAgentResponse): {
     currentValue: metadata.currentValue,
     expectedNewValue: metadata.expectedNewValue,
     newValue: metadata.newValue,
+    multiplier: metadata.multiplier,
+    addValue: metadata.addValue,
+    ethValue: metadata.ethValue,
+    ethValueInWei: metadata.ethValueInWei,
     userAddress: metadata.userAddress,
   };
 
   // Create the transaction plan if this is a write operation
   let txPlan: TxPlan | null = null;
-  if (metadata.txData && (metadata.operation === 'increment' || metadata.operation === 'set')) {
+  if (metadata.txData && 
+      (metadata.operation === 'increment' || 
+       metadata.operation === 'set' || 
+       metadata.operation === 'multiply' || 
+       metadata.operation === 'add' || 
+       metadata.operation === 'addFromMsgValue')) {
     txPlan = [
       {
         to: metadata.txData.to as `0x${string}`,

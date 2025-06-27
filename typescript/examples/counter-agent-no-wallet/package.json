@@ -1,7 +1,7 @@
 {
   "name": "counter-agent-no-wallet",
   "version": "1.0.0",
-  "description": "Counter Agent (No Wallet) - Agent for interacting with Arbitrum Stylus counter contract via MetaMask",
+  "description": "Counter Agent (No Wallet) - Agent for interacting with Arbitrum Stylus counter contract written in Rust via MetaMask",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

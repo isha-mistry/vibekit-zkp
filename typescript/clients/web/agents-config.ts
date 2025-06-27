@@ -32,7 +32,7 @@ export const chatAgents = [
   {
     id: 'ember-counter' as const,
     name: 'Counter',
-    description: 'Arbitrum Stylus counter smart contract agent',
+    description: 'Arbitrum Stylus counter smart contract agent (Rust-based)',
     suggestedActions: [
       {
         title: 'Get current',
@@ -48,6 +48,21 @@ export const chatAgents = [
         title: 'Set counter',
         label: 'to 42',
         action: 'Set the counter to 42',
+      },
+      {
+        title: 'Multiply counter',
+        label: 'by 3',
+        action: 'Multiply the counter by 3',
+      },
+      {
+        title: 'Add 25',
+        label: 'to counter',
+        action: 'Add 25 to the counter',
+      },
+      {
+        title: 'Send 0.001 ETH',
+        label: 'to add to counter',
+        action: 'Send 0.001 ETH to add to the counter',
       },
     ],
   },

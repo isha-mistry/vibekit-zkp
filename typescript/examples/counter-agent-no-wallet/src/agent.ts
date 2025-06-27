@@ -3,7 +3,7 @@ import { arbitrumSepolia } from 'viem/chains';
 import type { Task } from 'a2a-samples-js';
 
 export interface CounterOperation {
-  type: 'read' | 'increment' | 'set';
+  type: 'read' | 'increment' | 'set' | 'multiply' | 'add' | 'addFromMsgValue';
   value?: number;
   txData?: {
     to: string;
@@ -17,8 +17,11 @@ export class CounterAgent {
   private contractAddress: string;
   private counterAbi = parseAbi([
     'function number() external view returns (uint256)',
-    'function setNumber(uint256 number) external',
+    'function setNumber(uint256 new_number) external',
+    'function mulNumber(uint256 new_number) external',
+    'function addNumber(uint256 new_number) external',
     'function increment() external',
+    'function addFromMsgValue() external payable',
   ]);
 
   constructor(
@@ -33,7 +36,7 @@ export class CounterAgent {
   }
 
   async init(): Promise<void> {
-    console.log('CounterAgent initialized with contract:', this.contractAddress);
+    console.log('CounterAgent initialized with Stylus contract:', this.contractAddress);
   }
 
   async processUserInput(instruction: string, userAddress: string): Promise<Task> {
@@ -53,6 +56,21 @@ export class CounterAgent {
             throw new Error('Value is required for set operation');
           }
           return await this.handleSet(taskId, userAddress, operation.value);
+        case 'multiply':
+          if (operation.value === undefined) {
+            throw new Error('Value is required for multiply operation');
+          }
+          return await this.handleMultiply(taskId, userAddress, operation.value);
+        case 'add':
+          if (operation.value === undefined) {
+            throw new Error('Value is required for add operation');
+          }
+          return await this.handleAdd(taskId, userAddress, operation.value);
+        case 'addFromMsgValue':
+          if (operation.value === undefined) {
+            throw new Error('ETH value is required for addFromMsgValue operation');
+          }
+          return await this.handleAddFromMsgValue(taskId, userAddress, operation.value);
         default:
           throw new Error('Unknown operation type');
       }
@@ -68,23 +86,57 @@ export class CounterAgent {
   private parseInstruction(instruction: string): CounterOperation {
     const lowerInstruction = instruction.toLowerCase();
 
-    // Check for set operations with numbers
-    const setMatch = lowerInstruction.match(/set.*?(\d+)/) || 
-                    (lowerInstruction.match(/(\d+)/) && lowerInstruction.includes('set'));
+    // Check for addFromMsgValue operations (with ETH value)
+    const ethValueMatch = lowerInstruction.match(/(\d+(?:\.\d+)?)\s*eth/) || 
+                         lowerInstruction.match(/(\d+(?:\.\d+)?)\s*ether/);
     
-    if (setMatch || lowerInstruction.includes('set')) {
-      const value = setMatch && Array.isArray(setMatch) && setMatch[1] ? parseInt(setMatch[1]) : undefined;
-      if (value !== undefined) {
-        return { type: 'set', value };
-      } else {
-        throw new Error('Please specify a number to set the counter to, e.g., "Set counter to 42"');
-      }
+    if (ethValueMatch && ethValueMatch[1] && (lowerInstruction.includes('send') || 
+        lowerInstruction.includes('deposit') || 
+        (lowerInstruction.includes('add') && lowerInstruction.includes('eth')))) {
+      const ethValue = parseFloat(ethValueMatch[1]);
+      return { type: 'addFromMsgValue', value: ethValue };
+    }
+
+    // Check for multiply operations
+    let multiplyMatch = lowerInstruction.match(/multiply.*?(\d+)/);
+    if (!multiplyMatch) {
+      multiplyMatch = lowerInstruction.match(/(\d+).*?multiply/);
+    }
+    if (!multiplyMatch && lowerInstruction.includes('multiply')) {
+      multiplyMatch = lowerInstruction.match(/(\d+)/);
+    }
+    
+    if (multiplyMatch && multiplyMatch[1] && (lowerInstruction.includes('multiply') || lowerInstruction.includes('times'))) {
+      const value = parseInt(multiplyMatch[1]);
+      return { type: 'multiply', value };
+    }
+
+    // Check for add operations (but not increment)
+    let addMatch = lowerInstruction.match(/add.*?(\d+)/);
+    if (!addMatch && lowerInstruction.includes('add') && !lowerInstruction.includes('increment') && !lowerInstruction.includes('eth')) {
+      addMatch = lowerInstruction.match(/(\d+)/);
+    }
+    
+    if (addMatch && addMatch[1] && !lowerInstruction.includes('increment') && !lowerInstruction.includes('eth')) {
+      const value = parseInt(addMatch[1]);
+      return { type: 'add', value };
+    }
+
+    // Check for set operations with numbers
+    let setMatch = lowerInstruction.match(/set.*?(\d+)/);
+    if (!setMatch && lowerInstruction.includes('set')) {
+      setMatch = lowerInstruction.match(/(\d+)/);
+    }
+    
+    if (setMatch && setMatch[1]) {
+      const value = parseInt(setMatch[1]);
+      return { type: 'set', value };
     }
 
     // Check for increment operations
     if (lowerInstruction.includes('increment') || 
         lowerInstruction.includes('increase') || 
-        lowerInstruction.includes('add') ||
+        (lowerInstruction.includes('add') && !lowerInstruction.match(/\d/)) ||
         lowerInstruction.includes('bump')) {
       return { type: 'increment' };
     }
@@ -229,6 +281,161 @@ export class CounterAgent {
       };
     } catch (error) {
       throw new Error(`Failed to prepare set transaction: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  private async handleMultiply(taskId: string, userAddress: string, multiplier: number): Promise<Task> {
+    try {
+      // Get current value for reference
+      const currentValue = await this.publicClient.readContract({
+        address: this.contractAddress as `0x${string}`,
+        abi: this.counterAbi,
+        functionName: 'number',
+      });
+
+      const expectedNewValue = Number(currentValue) * multiplier;
+
+      // Encode the transaction data
+      const txData = encodeFunctionData({
+        abi: this.counterAbi,
+        functionName: 'mulNumber',
+        args: [BigInt(multiplier)],
+      });
+
+      return {
+        id: taskId,
+        status: {
+          state: 'completed',
+          message: {
+            role: 'agent',
+            parts: [
+              {
+                type: 'text',
+                text: `Ready to multiply counter ${currentValue.toString()} by ${multiplier} = ${expectedNewValue}. Please confirm the transaction in MetaMask.`,
+              },
+            ],
+          },
+        },
+        metadata: {
+          operation: 'multiply',
+          contractAddress: this.contractAddress,
+          currentValue: currentValue.toString(),
+          multiplier: multiplier.toString(),
+          expectedNewValue: expectedNewValue.toString(),
+          userAddress,
+          txData: {
+            to: this.contractAddress,
+            data: txData,
+            value: '0x0', // No ETH value needed
+          },
+        },
+      };
+    } catch (error) {
+      throw new Error(`Failed to prepare multiply transaction: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  private async handleAdd(taskId: string, userAddress: string, addValue: number): Promise<Task> {
+    try {
+      // Get current value for reference
+      const currentValue = await this.publicClient.readContract({
+        address: this.contractAddress as `0x${string}`,
+        abi: this.counterAbi,
+        functionName: 'number',
+      });
+
+      const expectedNewValue = Number(currentValue) + addValue;
+
+      // Encode the transaction data
+      const txData = encodeFunctionData({
+        abi: this.counterAbi,
+        functionName: 'addNumber',
+        args: [BigInt(addValue)],
+      });
+
+      return {
+        id: taskId,
+        status: {
+          state: 'completed',
+          message: {
+            role: 'agent',
+            parts: [
+              {
+                type: 'text',
+                text: `Ready to add ${addValue} to counter ${currentValue.toString()} = ${expectedNewValue}. Please confirm the transaction in MetaMask.`,
+              },
+            ],
+          },
+        },
+        metadata: {
+          operation: 'add',
+          contractAddress: this.contractAddress,
+          currentValue: currentValue.toString(),
+          addValue: addValue.toString(),
+          expectedNewValue: expectedNewValue.toString(),
+          userAddress,
+          txData: {
+            to: this.contractAddress,
+            data: txData,
+            value: '0x0', // No ETH value needed
+          },
+        },
+      };
+    } catch (error) {
+      throw new Error(`Failed to prepare add transaction: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  private async handleAddFromMsgValue(taskId: string, userAddress: string, ethValue: number): Promise<Task> {
+    try {
+      // Get current value for reference
+      const currentValue = await this.publicClient.readContract({
+        address: this.contractAddress as `0x${string}`,
+        abi: this.counterAbi,
+        functionName: 'number',
+      });
+
+      // Convert ETH to wei
+      const ethValueInWei = BigInt(Math.floor(ethValue * 1e18));
+      const expectedNewValue = Number(currentValue) + Number(ethValueInWei);
+
+      // Encode the transaction data
+      const txData = encodeFunctionData({
+        abi: this.counterAbi,
+        functionName: 'addFromMsgValue',
+      });
+
+      return {
+        id: taskId,
+        status: {
+          state: 'completed',
+          message: {
+            role: 'agent',
+            parts: [
+              {
+                type: 'text',
+                text: `Ready to send ${ethValue} ETH (${ethValueInWei.toString()} wei) to add to counter. Current: ${currentValue.toString()}, Expected new value: ${expectedNewValue}. Please confirm the transaction in MetaMask.`,
+              },
+            ],
+          },
+        },
+        metadata: {
+          operation: 'addFromMsgValue',
+          contractAddress: this.contractAddress,
+          currentValue: currentValue.toString(),
+          ethValue: ethValue.toString(),
+          ethValueInWei: ethValueInWei.toString(),
+          expectedNewValue: expectedNewValue.toString(),
+          userAddress,
+          txData: {
+            to: this.contractAddress,
+            data: txData,
+            value: `0x${ethValueInWei.toString(16)}`, // ETH value in hex
+          },
+        },
+      };
+    } catch (error) {
+      throw new Error(`Failed to prepare addFromMsgValue transaction: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
