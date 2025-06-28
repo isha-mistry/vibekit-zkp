@@ -82,9 +82,9 @@ export const chatAgents = [
         action: 'Initialize multisig with 2 confirmations required',
       },
       {
-        title: 'Get transaction',
-        label: 'count',
-        action: 'How many transactions are in the multisig?',
+        title: 'Submit transaction',
+        label: 'to multisig',
+        action: 'Submit a transaction to the multisig',
       },
       {
         title: 'Confirm transaction',
@@ -97,9 +97,9 @@ export const chatAgents = [
         action: 'Execute transaction 0',
       },
       {
-        title: 'Get multisig',
-        label: 'owners',
-        action: 'Get multisig owners',
+        title: 'Check if owner',
+        label: 'of multisig',
+        action: 'Check if I am an owner of the multisig',
       },
     ],
   },

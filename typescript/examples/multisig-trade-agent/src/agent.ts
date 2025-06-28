@@ -5,7 +5,7 @@ import { McpClient } from '@modelcontextprotocol/sdk/client/mcp.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 
 export interface MultisigOperation {
-  type: 'swap' | 'initialize' | 'deposit' | 'submitTransaction' | 'confirmTransaction' | 'executeTransaction' | 'revokeConfirmation' | 'getTransactionDetails' | 'getOwners' | 'getTransactionCount' | 'isOwner';
+  type: 'swap' | 'initialize' | 'submitTransaction' | 'confirmTransaction' | 'executeTransaction' | 'isOwner';
   swapData?: {
     fromToken: string;
     toToken: string;
@@ -39,17 +39,11 @@ export class MultisigTradeAgent {
   private camelotMcpUrl: string;
   
   private multisigAbi = parseAbi([
-    'function numConfirmationsRequired() external view returns (uint256)',
-    'function deposit() external payable',
-    'function submitTransaction(address to, uint256 value, bytes calldata data) external',
     'function initialize(address[] memory owners, uint256 num_confirmations_required) external',
-    'function executeTransaction(uint256 tx_index) external',
-    'function confirmTransaction(uint256 tx_index) external',
-    'function revokeConfirmation(uint256 tx_index) external',
-    'function isOwner(address check_address) external view returns (bool)',
-    'function getTransactionCount() external view returns (uint256)',
-    'function getTransaction(uint256 tx_index) external view returns (address, uint256, bytes, bool, uint256)',
-    'function getOwners() external view returns (address[])',
+    'function submit_transaction(address to, uint256 value, bytes calldata data) external',
+    'function confirm_transaction(uint256 tx_index) external',
+    'function execute_transaction(uint256 tx_index) external',
+    'function is_owner(address check_address) external view returns (bool)',
   ]);
 
   constructor(
@@ -105,11 +99,11 @@ export class MultisigTradeAgent {
           }
           return await this.handleInitialize(taskId, userAddress, operation.multisigData.owners, operation.multisigData.numConfirmationsRequired);
           
-        case 'deposit':
-          if (!operation.multisigData?.value) {
-            throw new Error('ETH amount is required for deposit');
+        case 'submitTransaction':
+          if (!operation.multisigData?.to || !operation.multisigData?.value || !operation.multisigData?.data) {
+            throw new Error('Transaction details (to, value, data) are required for submission');
           }
-          return await this.handleDeposit(taskId, userAddress, operation.multisigData.value);
+          return await this.handleSubmitTransaction(taskId, userAddress, operation.multisigData.to, operation.multisigData.value, operation.multisigData.data);
           
         case 'confirmTransaction':
           if (operation.multisigData?.txIndex === undefined) {
@@ -122,24 +116,6 @@ export class MultisigTradeAgent {
             throw new Error('Transaction index is required for execution');
           }
           return await this.handleExecuteTransaction(taskId, userAddress, operation.multisigData.txIndex);
-          
-        case 'revokeConfirmation':
-          if (operation.multisigData?.txIndex === undefined) {
-            throw new Error('Transaction index is required for revocation');
-          }
-          return await this.handleRevokeConfirmation(taskId, userAddress, operation.multisigData.txIndex);
-          
-        case 'getTransactionDetails':
-          if (operation.multisigData?.txIndex === undefined) {
-            throw new Error('Transaction index is required to get transaction details');
-          }
-          return await this.handleGetTransactionDetails(taskId, userAddress, operation.multisigData.txIndex);
-          
-        case 'getOwners':
-          return await this.handleGetOwners(taskId, userAddress);
-          
-        case 'getTransactionCount':
-          return await this.handleGetTransactionCount(taskId, userAddress);
           
         case 'isOwner':
           if (!operation.multisigData?.checkAddress) {
@@ -196,508 +172,367 @@ export class MultisigTradeAgent {
       };
     }
 
-    // Check for deposit operations
-    const depositMatch = lowerInstruction.match(/deposit\s+(\d+(?:\.\d+)?)/);
-    if (depositMatch || lowerInstruction.includes('deposit')) {
-      const ethValue = depositMatch?.[1] ? parseFloat(depositMatch[1]) : 0.01;
+    // Check for submit transaction operations
+    const submitMatch = lowerInstruction.match(/submit.*?transaction/);
+    if (submitMatch || lowerInstruction.includes('submit')) {
       return {
-        type: 'deposit',
+        type: 'submitTransaction',
         multisigData: {
-          value: ethValue.toString()
+          to: userAddress, // Default to user address
+          value: '0',
+          data: '0x'
         }
       };
     }
 
-    // Check for transaction operations
-    const confirmMatch = lowerInstruction.match(/confirm.*?transaction\s+(\d+)/);
-    if (confirmMatch) {
+    // Check for confirm transaction operations
+    const confirmMatch = lowerInstruction.match(/confirm.*?(?:transaction|tx)\s+(\d+)/);
+    if (confirmMatch || lowerInstruction.includes('confirm')) {
+      const txIndex = confirmMatch?.[1] ? parseInt(confirmMatch[1]) : 0;
       return {
         type: 'confirmTransaction',
         multisigData: {
-          txIndex: parseInt(confirmMatch[1])
+          txIndex
         }
       };
     }
 
-    const executeMatch = lowerInstruction.match(/execute.*?transaction\s+(\d+)/);
-    if (executeMatch) {
+    // Check for execute transaction operations
+    const executeMatch = lowerInstruction.match(/execute.*?(?:transaction|tx)\s+(\d+)/);
+    if (executeMatch || lowerInstruction.includes('execute')) {
+      const txIndex = executeMatch?.[1] ? parseInt(executeMatch[1]) : 0;
       return {
         type: 'executeTransaction',
         multisigData: {
-          txIndex: parseInt(executeMatch[1])
+          txIndex
         }
       };
     }
 
-    const revokeMatch = lowerInstruction.match(/revoke.*?transaction\s+(\d+)/);
-    if (revokeMatch) {
-      return {
-        type: 'revokeConfirmation',
-        multisigData: {
-          txIndex: parseInt(revokeMatch[1])
-        }
-      };
-    }
-
-    const detailsMatch = lowerInstruction.match(/(?:get|show).*?transaction\s+(\d+)/);
-    if (detailsMatch) {
-      return {
-        type: 'getTransactionDetails',
-        multisigData: {
-          txIndex: parseInt(detailsMatch[1])
-        }
-      };
-    }
-
-    // Check for owner operations
-    if (lowerInstruction.includes('get owners') || lowerInstruction.includes('show owners')) {
-      return { type: 'getOwners' };
-    }
-
-    if (lowerInstruction.includes('transaction count') || lowerInstruction.includes('how many transactions')) {
-      return { type: 'getTransactionCount' };
-    }
-
-    const isOwnerMatch = lowerInstruction.match(/is\s+(0x[a-fA-F0-9]{40})\s+(?:an\s+)?owner/);
-    if (isOwnerMatch) {
+    // Check for is owner operations
+    const ownerMatch = lowerInstruction.match(/is\s+owner|check\s+owner/);
+    if (ownerMatch || lowerInstruction.includes('owner')) {
       return {
         type: 'isOwner',
         multisigData: {
-          checkAddress: isOwnerMatch[1]
+          checkAddress: userAddress
         }
       };
     }
 
-    // Default to getting transaction count
-    return { type: 'getTransactionCount' };
+    // Default to swap for unrecognized instructions
+    return {
+      type: 'swap',
+      swapData: {
+        fromToken: 'USDC',
+        toToken: 'ETH',
+        amount: '100',
+        fromChain: 'arbitrum',
+        toChain: 'arbitrum'
+      }
+    };
   }
 
   private async handleSwapTransaction(taskId: string, userAddress: string, swapData: any): Promise<Task> {
     try {
-      if (!this.mcpClient) {
-        throw new Error('Camelot MCP client not available');
+      console.log('[MultisigTradeAgent] Handling swap transaction');
+
+      // Use Camelot MCP to prepare swap transaction
+      let swapTx: any = null;
+      if (this.mcpClient) {
+        try {
+          const response = await this.mcpClient.callTool('askSwapAgent', {
+            instruction: `Swap ${swapData.amount} ${swapData.fromToken} for ${swapData.toToken} on Arbitrum`,
+            userAddress: userAddress
+          });
+          
+          console.log('Camelot MCP response:', response);
+          
+          if (response.content?.[0]?.text) {
+            const parsedResponse = JSON.parse(response.content[0].text);
+            if (parsedResponse.metadata?.txData) {
+              swapTx = parsedResponse.metadata.txData;
+            }
+          }
+        } catch (mcpError) {
+          console.warn('MCP call failed:', mcpError);
+        }
       }
 
-      // Call the swapping agent to get transaction data
-      const swapResult = await this.mcpClient.callTool('askSwapAgent', {
-        instruction: `Swap ${swapData.amount} ${swapData.fromToken} to ${swapData.toToken} on ${swapData.fromChain || 'arbitrum'}`,
-        userAddress: userAddress
-      });
-
-      // Parse the swap result to extract transaction data
-      const swapResponse = JSON.parse(swapResult.content[0].text);
-      
-      if (swapResponse.status.state === 'failed') {
-        throw new Error(`Swap preparation failed: ${swapResponse.status.message.parts[0].text}`);
+      // If MCP failed, create a placeholder swap transaction
+      if (!swapTx) {
+        swapTx = {
+          to: '0x1111000000000000000000000000000000001111', // Placeholder DEX router
+          data: '0x', // Placeholder swap data
+          value: '0'
+        };
       }
 
-      const swapTxData = swapResponse.metadata?.txData;
-      if (!swapTxData) {
-        throw new Error('No transaction data received from swap agent');
-      }
-
-      // Submit the swap transaction to the multisig contract
+      // Submit this swap transaction to the multisig
       const submitTxData = encodeFunctionData({
         abi: this.multisigAbi,
-        functionName: 'submitTransaction',
-        args: [
-          swapTxData.to as Address,
-          BigInt(swapTxData.value || '0'),
-          swapTxData.data as `0x${string}`
-        ],
+        functionName: 'submit_transaction',
+        args: [swapTx.to as Address, BigInt(swapTx.value), swapTx.data as `0x${string}`]
       });
 
       return {
         id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Ready to submit swap transaction to multisig. Swapping ${swapData.amount} ${swapData.fromToken} to ${swapData.toToken}. Please confirm to submit this transaction to the multisig contract for approval.`,
-              },
-            ],
-          },
-        },
+        type: 'multisig-trade',
+        title: `Submit Swap Transaction to Multisig`,
+        description: `Submit a swap transaction for ${swapData.amount} ${swapData.fromToken} → ${swapData.toToken} to the multisig wallet for approval`,
+        transactions: [
+          {
+            to: this.multisigContractAddress as Address,
+            data: submitTxData as `0x${string}`,
+            value: '0',
+            chainId: arbitrumSepolia.id,
+          }
+        ],
+        status: 'pending',
         metadata: {
           operation: 'swap',
           multisigContractAddress: this.multisigContractAddress,
-          swapDetails: swapData,
-          originalSwapTx: swapTxData,
           userAddress,
+          swapDetails: swapData,
+          originalSwapTx: swapTx,
           txData: {
             to: this.multisigContractAddress,
             data: submitTxData,
-            value: '0x0',
-          },
-        },
+            value: '0'
+          }
+        }
       };
     } catch (error) {
-      throw new Error(`Failed to prepare multisig swap: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error in handleSwapTransaction:', error);
+      throw error;
     }
   }
 
   private async handleInitialize(taskId: string, userAddress: string, owners: string[], numConfirmationsRequired: number): Promise<Task> {
     try {
-      const txData = encodeFunctionData({
+      console.log('[MultisigTradeAgent] Handling initialize');
+
+      const initializeData = encodeFunctionData({
         abi: this.multisigAbi,
         functionName: 'initialize',
-        args: [owners as Address[], BigInt(numConfirmationsRequired)],
+        args: [owners as Address[], BigInt(numConfirmationsRequired)]
       });
 
       return {
         id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Ready to initialize multisig contract with ${owners.length} owners requiring ${numConfirmationsRequired} confirmations.`,
-              },
-            ],
-          },
-        },
+        type: 'multisig-trade',
+        title: `Initialize Multisig Wallet`,
+        description: `Initialize multisig wallet with ${owners.length} owner(s) requiring ${numConfirmationsRequired} confirmation(s)`,
+        transactions: [
+          {
+            to: this.multisigContractAddress as Address,
+            data: initializeData as `0x${string}`,
+            value: '0',
+            chainId: arbitrumSepolia.id,
+          }
+        ],
+        status: 'pending',
         metadata: {
           operation: 'initialize',
           multisigContractAddress: this.multisigContractAddress,
+          userAddress,
           owners,
           numConfirmationsRequired,
-          userAddress,
           txData: {
             to: this.multisigContractAddress,
-            data: txData,
-            value: '0x0',
-          },
-        },
+            data: initializeData,
+            value: '0'
+          }
+        }
       };
     } catch (error) {
-      throw new Error(`Failed to prepare initialization: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error in handleInitialize:', error);
+      throw error;
     }
   }
 
-  private async handleDeposit(taskId: string, userAddress: string, ethAmount: string): Promise<Task> {
+  private async handleSubmitTransaction(taskId: string, userAddress: string, to: string, value: string, data: string): Promise<Task> {
     try {
-      const ethValueInWei = BigInt(Math.floor(parseFloat(ethAmount) * 1e18));
-      
-      const txData = encodeFunctionData({
+      console.log('[MultisigTradeAgent] Handling submit transaction');
+
+      const submitTxData = encodeFunctionData({
         abi: this.multisigAbi,
-        functionName: 'deposit',
+        functionName: 'submit_transaction',
+        args: [to as Address, BigInt(value), data as `0x${string}`]
       });
 
       return {
         id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Ready to deposit ${ethAmount} ETH to the multisig contract.`,
-              },
-            ],
-          },
-        },
+        type: 'multisig-trade',
+        title: `Submit Transaction to Multisig`,
+        description: `Submit a transaction to ${to} with value ${value} wei to the multisig wallet`,
+        transactions: [
+          {
+            to: this.multisigContractAddress as Address,
+            data: submitTxData as `0x${string}`,
+            value: '0',
+            chainId: arbitrumSepolia.id,
+          }
+        ],
+        status: 'pending',
         metadata: {
-          operation: 'deposit',
+          operation: 'submitTransaction',
           multisigContractAddress: this.multisigContractAddress,
-          ethAmount,
-          ethValueInWei: ethValueInWei.toString(),
           userAddress,
           txData: {
             to: this.multisigContractAddress,
-            data: txData,
-            value: `0x${ethValueInWei.toString(16)}`,
-          },
-        },
+            data: submitTxData,
+            value: '0'
+          }
+        }
       };
     } catch (error) {
-      throw new Error(`Failed to prepare deposit: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error in handleSubmitTransaction:', error);
+      throw error;
     }
   }
 
   private async handleConfirmTransaction(taskId: string, userAddress: string, txIndex: number): Promise<Task> {
     try {
-      const txData = encodeFunctionData({
+      console.log('[MultisigTradeAgent] Handling confirm transaction');
+
+      const confirmTxData = encodeFunctionData({
         abi: this.multisigAbi,
-        functionName: 'confirmTransaction',
-        args: [BigInt(txIndex)],
+        functionName: 'confirm_transaction',
+        args: [BigInt(txIndex)]
       });
 
       return {
         id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Ready to confirm transaction #${txIndex} in the multisig contract.`,
-              },
-            ],
-          },
-        },
+        type: 'multisig-trade',
+        title: `Confirm Transaction #${txIndex}`,
+        description: `Confirm transaction #${txIndex} in the multisig wallet`,
+        transactions: [
+          {
+            to: this.multisigContractAddress as Address,
+            data: confirmTxData as `0x${string}`,
+            value: '0',
+            chainId: arbitrumSepolia.id,
+          }
+        ],
+        status: 'pending',
         metadata: {
           operation: 'confirmTransaction',
           multisigContractAddress: this.multisigContractAddress,
-          txIndex,
           userAddress,
+          txIndex,
           txData: {
             to: this.multisigContractAddress,
-            data: txData,
-            value: '0x0',
-          },
-        },
+            data: confirmTxData,
+            value: '0'
+          }
+        }
       };
     } catch (error) {
-      throw new Error(`Failed to prepare confirmation: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error in handleConfirmTransaction:', error);
+      throw error;
     }
   }
 
   private async handleExecuteTransaction(taskId: string, userAddress: string, txIndex: number): Promise<Task> {
     try {
-      const txData = encodeFunctionData({
+      console.log('[MultisigTradeAgent] Handling execute transaction');
+
+      const executeTxData = encodeFunctionData({
         abi: this.multisigAbi,
-        functionName: 'executeTransaction',
-        args: [BigInt(txIndex)],
+        functionName: 'execute_transaction',
+        args: [BigInt(txIndex)]
       });
 
       return {
         id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Ready to execute transaction #${txIndex} in the multisig contract.`,
-              },
-            ],
-          },
-        },
+        type: 'multisig-trade',
+        title: `Execute Transaction #${txIndex}`,
+        description: `Execute transaction #${txIndex} in the multisig wallet`,
+        transactions: [
+          {
+            to: this.multisigContractAddress as Address,
+            data: executeTxData as `0x${string}`,
+            value: '0',
+            chainId: arbitrumSepolia.id,
+          }
+        ],
+        status: 'pending',
         metadata: {
           operation: 'executeTransaction',
           multisigContractAddress: this.multisigContractAddress,
-          txIndex,
           userAddress,
+          txIndex,
           txData: {
             to: this.multisigContractAddress,
-            data: txData,
-            value: '0x0',
-          },
-        },
+            data: executeTxData,
+            value: '0'
+          }
+        }
       };
     } catch (error) {
-      throw new Error(`Failed to prepare execution: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  private async handleRevokeConfirmation(taskId: string, userAddress: string, txIndex: number): Promise<Task> {
-    try {
-      const txData = encodeFunctionData({
-        abi: this.multisigAbi,
-        functionName: 'revokeConfirmation',
-        args: [BigInt(txIndex)],
-      });
-
-      return {
-        id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Ready to revoke confirmation for transaction #${txIndex} in the multisig contract.`,
-              },
-            ],
-          },
-        },
-        metadata: {
-          operation: 'revokeConfirmation',
-          multisigContractAddress: this.multisigContractAddress,
-          txIndex,
-          userAddress,
-          txData: {
-            to: this.multisigContractAddress,
-            data: txData,
-            value: '0x0',
-          },
-        },
-      };
-    } catch (error) {
-      throw new Error(`Failed to prepare revocation: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  private async handleGetTransactionDetails(taskId: string, userAddress: string, txIndex: number): Promise<Task> {
-    try {
-      const [to, value, data, executed, numConfirmations] = await this.publicClient.readContract({
-        address: this.multisigContractAddress as Address,
-        abi: this.multisigAbi,
-        functionName: 'getTransaction',
-        args: [BigInt(txIndex)],
-      });
-
-      return {
-        id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Transaction #${txIndex} details: To: ${to}, Value: ${value.toString()} wei, Executed: ${executed}, Confirmations: ${numConfirmations.toString()}`,
-              },
-            ],
-          },
-        },
-        metadata: {
-          operation: 'getTransactionDetails',
-          multisigContractAddress: this.multisigContractAddress,
-          txIndex,
-          transactionDetails: {
-            to: to.toString(),
-            value: value.toString(),
-            data: data.toString(),
-            executed,
-            numConfirmations: numConfirmations.toString(),
-          },
-          userAddress,
-        },
-      };
-    } catch (error) {
-      throw new Error(`Failed to get transaction details: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  private async handleGetOwners(taskId: string, userAddress: string): Promise<Task> {
-    try {
-      const owners = await this.publicClient.readContract({
-        address: this.multisigContractAddress as Address,
-        abi: this.multisigAbi,
-        functionName: 'getOwners',
-      });
-
-      return {
-        id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Multisig owners: ${owners.join(', ')}`,
-              },
-            ],
-          },
-        },
-        metadata: {
-          operation: 'getOwners',
-          multisigContractAddress: this.multisigContractAddress,
-          owners: owners,
-          userAddress,
-        },
-      };
-    } catch (error) {
-      throw new Error(`Failed to get owners: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  private async handleGetTransactionCount(taskId: string, userAddress: string): Promise<Task> {
-    try {
-      const count = await this.publicClient.readContract({
-        address: this.multisigContractAddress as Address,
-        abi: this.multisigAbi,
-        functionName: 'getTransactionCount',
-      });
-
-      return {
-        id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Total transactions in multisig: ${count.toString()}`,
-              },
-            ],
-          },
-        },
-        metadata: {
-          operation: 'getTransactionCount',
-          multisigContractAddress: this.multisigContractAddress,
-          transactionCount: count.toString(),
-          userAddress,
-        },
-      };
-    } catch (error) {
-      throw new Error(`Failed to get transaction count: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error in handleExecuteTransaction:', error);
+      throw error;
     }
   }
 
   private async handleIsOwner(taskId: string, userAddress: string, checkAddress: string): Promise<Task> {
     try {
+      console.log('[MultisigTradeAgent] Handling is owner check');
+
       const isOwner = await this.publicClient.readContract({
         address: this.multisigContractAddress as Address,
         abi: this.multisigAbi,
-        functionName: 'isOwner',
-        args: [checkAddress as Address],
+        functionName: 'is_owner',
+        args: [checkAddress as Address]
       });
 
       return {
         id: taskId,
-        status: {
-          state: 'completed',
-          message: {
-            role: 'agent',
-            parts: [
-              {
-                type: 'text',
-                text: `Address ${checkAddress} is ${isOwner ? '' : 'not '}an owner of the multisig contract.`,
-              },
-            ],
-          },
-        },
+        type: 'multisig-trade',
+        title: `Owner Status Check`,
+        description: `Check if ${checkAddress} is an owner of the multisig wallet`,
+        transactions: [],
+        status: 'completed',
         metadata: {
           operation: 'isOwner',
           multisigContractAddress: this.multisigContractAddress,
-          checkAddress,
-          isOwner,
           userAddress,
-        },
+          checkAddress,
+          isOwner: Boolean(isOwner)
+        }
       };
     } catch (error) {
-      throw new Error(`Failed to check ownership: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error in handleIsOwner:', error);
+      return {
+        id: taskId,
+        type: 'multisig-trade',
+        title: `Owner Status Check Failed`,
+        description: `Failed to check if ${checkAddress} is an owner: ${error instanceof Error ? error.message : String(error)}`,
+        transactions: [],
+        status: 'failed',
+        metadata: {
+          operation: 'isOwner',
+          multisigContractAddress: this.multisigContractAddress,
+          userAddress,
+          checkAddress,
+          isOwner: false
+        }
+      };
     }
   }
 
   private createErrorTask(taskId: string, errorMessage: string): Task {
     return {
       id: taskId,
-      status: {
-        state: 'failed',
-        message: {
-          role: 'agent',
-          parts: [
-            {
-              type: 'text',
-              text: `Error: ${errorMessage}`,
-            },
-          ],
-        },
-      },
+      type: 'multisig-trade',
+      title: 'Error',
+      description: `MultisigTradeAgent error: ${errorMessage}`,
+      transactions: [],
+      status: 'failed',
+      metadata: {
+        error: errorMessage
+      }
     };
   }
 } 

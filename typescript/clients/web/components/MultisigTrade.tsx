@@ -53,33 +53,6 @@ export function MultisigTrade({
             Operation: {txPreview.operation?.toUpperCase()}
           </span>
           
-          {txPreview.operation === 'getTransactionDetails' && txPreview.transactionDetails && (
-            <div className="space-y-2">
-              <p className="font-normal">
-                <span className="font-semibold">Transaction #{txPreview.txIndex}:</span>
-              </p>
-              <p className="text-sm">To: {txPreview.transactionDetails.to}</p>
-              <p className="text-sm">Value: {txPreview.transactionDetails.value} wei</p>
-              <p className="text-sm">Executed: {txPreview.transactionDetails.executed ? 'Yes' : 'No'}</p>
-              <p className="text-sm">Confirmations: {txPreview.transactionDetails.numConfirmations}</p>
-            </div>
-          )}
-
-          {txPreview.operation === 'getOwners' && txPreview.owners && (
-            <div className="space-y-2">
-              <p className="font-semibold">Multisig Owners:</p>
-              {txPreview.owners.map((owner: string, index: number) => (
-                <p key={index} className="text-sm break-all">{owner}</p>
-              ))}
-            </div>
-          )}
-
-          {txPreview.operation === 'getTransactionCount' && (
-            <p className="font-normal">
-              <span className="font-semibold">Total Transactions: {txPreview.transactionCount}</span>
-            </p>
-          )}
-
           {txPreview.operation === 'isOwner' && (
             <p className="font-normal">
               <span className="font-semibold">
@@ -135,21 +108,19 @@ export function MultisigTrade({
               </div>
             )}
 
-            {txPreview.operation === 'deposit' && (
+            {txPreview.operation === 'submitTransaction' && (
               <div className="space-y-2">
-                <p className="font-semibold text-green-400">Deposit to Multisig</p>
-                <p className="text-sm">Amount: {txPreview.ethAmount} ETH</p>
+                <p className="font-semibold text-purple-400">Submit Transaction to Multisig</p>
+                <p className="text-sm">A new transaction will be submitted to the multisig wallet for approval</p>
               </div>
             )}
 
             {(txPreview.operation === 'confirmTransaction' || 
-              txPreview.operation === 'executeTransaction' || 
-              txPreview.operation === 'revokeConfirmation') && (
+              txPreview.operation === 'executeTransaction') && (
               <div className="space-y-2">
                 <p className="font-semibold text-orange-400">
                   {txPreview.operation === 'confirmTransaction' && 'Confirm Transaction'}
                   {txPreview.operation === 'executeTransaction' && 'Execute Transaction'}
-                  {txPreview.operation === 'revokeConfirmation' && 'Revoke Confirmation'}
                 </p>
                 <p className="text-sm">Transaction Index: #{txPreview.txIndex}</p>
               </div>
@@ -200,52 +171,34 @@ export function MultisigTrade({
                     JSON.stringify(approvalError, null, 2)}
                 </p>
               )}
-              {needsApproval &&
-                isApprovalPhaseComplete &&
-                !isTxPending &&
-                !isTxSuccess &&
-                !txError && (
-                  <p className="p-2 rounded-2xl border-green-800 bg-green-200 w-full border-2 text-green-800">
-                    All Approvals Sent! Ready to execute.
-                  </p>
-                )}
 
               {/* Action Buttons */}
-              <div className="flex gap-3">
-                {needsApproval && (
+              <div className="flex flex-col gap-2">
+                {needsApproval && !isApprovalPhaseComplete && (
                   <button
-                    className="mt-4 bg-purple-700 text-white py-2 px-4 rounded-full disabled:bg-zinc-600 disabled:border-2 disabled:border-zinc-500 disabled:text-gray-400"
-                    type="button"
                     onClick={approveNext}
-                    disabled={!canApprove}
+                    disabled={!canApprove || isApprovalPending}
+                    className="p-2 border-purple-500 border-2 bg-purple-600 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded-2xl"
                   >
                     {isApprovalPending
                       ? `Approving ${approvalIndex + 1}/${totalApprovals}...`
-                      : isApprovalPhaseComplete
-                      ? "All Approved"
                       : `Approve ${approvalIndex + 1}/${totalApprovals}`}
                   </button>
                 )}
+
                 <button
-                  className="mt-4 bg-purple-700 text-white py-2 px-4 rounded-full disabled:opacity-50"
-                  type="button"
                   onClick={executeMain}
-                  disabled={!canExecute}
+                  disabled={!canExecute || isTxPending}
+                  className="p-2 border-purple-500 border-2 bg-purple-600 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded-2xl"
                 >
-                  {isTxPending
-                    ? "Executing..."
-                    : needsApproval
-                    ? "Execute Transaction"
-                    : "Sign Transaction"}
+                  {isTxPending ? "Executing..." : "Execute Multisig Transaction"}
                 </button>
               </div>
             </>
           ) : (
-            // Wallet not connected section
-            <p className="text-red-500 p-2 flex rounded-2xl border-gray-400 bg-gray-200 w-full border-2 flex-col">
-              <div className="mb-2">Please connect your Wallet to proceed</div>
+            <div className="flex justify-center">
               <ConnectButton />
-            </p>
+            </div>
           )}
         </div>
       )}

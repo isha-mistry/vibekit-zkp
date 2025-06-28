@@ -11,9 +11,9 @@ A sophisticated agent that combines Camelot DEX swapping capabilities with Rust-
 
 ### Multisig Management
 - **Initialize Multisig**: Set up a new multisig with owners and confirmation requirements
-- **Deposit ETH**: Add funds to the multisig contract
-- **Transaction Management**: Confirm, execute, or revoke transaction confirmations
-- **Query Operations**: Check owners, transaction details, and contract state
+- **Submit Transactions**: Submit any transaction to the multisig for approval
+- **Transaction Management**: Confirm and execute transactions
+- **Owner Verification**: Check if addresses are owners of the multisig
 
 ## Environment Variables
 
@@ -34,19 +34,13 @@ PORT=3011
 The agent interfaces with a Rust-based Arbitrum Stylus multisig contract with the following functions:
 
 ### Read Functions
-- `numConfirmationsRequired()` - Get required confirmation count
-- `isOwner(address)` - Check if address is an owner
-- `getTransactionCount()` - Get total transaction count
-- `getTransaction(uint256)` - Get transaction details
-- `getOwners()` - Get list of all owners
+- `is_owner(address)` - Check if address is an owner
 
 ### Write Functions
 - `initialize(address[], uint256)` - Initialize with owners and confirmation requirement
-- `deposit()` - Deposit ETH to the contract (payable)
-- `submitTransaction(address, uint256, bytes)` - Submit a new transaction
-- `confirmTransaction(uint256)` - Confirm a transaction
-- `executeTransaction(uint256)` - Execute a confirmed transaction
-- `revokeConfirmation(uint256)` - Revoke your confirmation
+- `submit_transaction(address, uint256, bytes)` - Submit a new transaction
+- `confirm_transaction(uint256)` - Confirm a transaction
+- `execute_transaction(uint256)` - Execute a confirmed transaction
 
 ## Usage Examples
 
@@ -59,11 +53,10 @@ The agent interfaces with a Rust-based Arbitrum Stylus multisig contract with th
 ### Multisig Management
 ```
 "Initialize multisig with 2 confirmations required"
-"Deposit 0.1 ETH to the multisig"
+"Submit a transaction to the multisig"
 "Confirm transaction 0"
 "Execute transaction 1"
-"Get multisig owners"
-"How many transactions are in the multisig?"
+"Check if I am an owner of the multisig"
 ```
 
 ### Transaction Flow

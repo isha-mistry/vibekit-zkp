@@ -13,7 +13,7 @@ export interface MultisigTradeAgentResponse {
     };
   };
   metadata?: {
-    operation: 'swap' | 'initialize' | 'deposit' | 'confirmTransaction' | 'executeTransaction' | 'revokeConfirmation' | 'getTransactionDetails' | 'getOwners' | 'getTransactionCount' | 'isOwner';
+    operation: 'swap' | 'initialize' | 'submitTransaction' | 'confirmTransaction' | 'executeTransaction' | 'isOwner';
     multisigContractAddress: string;
     userAddress: string;
     
@@ -35,22 +35,10 @@ export interface MultisigTradeAgentResponse {
     owners?: string[];
     numConfirmationsRequired?: number;
     
-    // Deposit-specific fields
-    ethAmount?: string;
-    ethValueInWei?: string;
-    
     // Transaction management fields
     txIndex?: number;
     
     // Read operation results
-    transactionDetails?: {
-      to: string;
-      value: string;
-      data: string;
-      executed: boolean;
-      numConfirmations: string;
-    };
-    transactionCount?: string;
     isOwner?: boolean;
     checkAddress?: string;
     
@@ -87,16 +75,10 @@ export function extractMultisigTransactionData(response: MultisigTradeAgentRespo
     owners: metadata.owners,
     numConfirmationsRequired: metadata.numConfirmationsRequired,
     
-    // Deposit-specific data
-    ethAmount: metadata.ethAmount,
-    ethValueInWei: metadata.ethValueInWei,
-    
     // Transaction management data
     txIndex: metadata.txIndex,
     
     // Read operation results
-    transactionDetails: metadata.transactionDetails,
-    transactionCount: metadata.transactionCount,
     isOwner: metadata.isOwner,
     checkAddress: metadata.checkAddress,
   };
@@ -106,10 +88,9 @@ export function extractMultisigTransactionData(response: MultisigTradeAgentRespo
   if (metadata.txData && 
       (metadata.operation === 'swap' || 
        metadata.operation === 'initialize' || 
-       metadata.operation === 'deposit' || 
+       metadata.operation === 'submitTransaction' || 
        metadata.operation === 'confirmTransaction' || 
-       metadata.operation === 'executeTransaction' || 
-       metadata.operation === 'revokeConfirmation')) {
+       metadata.operation === 'executeTransaction')) {
     txPlan = [
       {
         to: metadata.txData.to as `0x${string}`,
