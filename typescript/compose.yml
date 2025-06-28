@@ -41,6 +41,22 @@ services:
       - 3010:3010
     restart: unless-stopped
 
+  multisig-trade-agent:
+    build:
+      context: ./
+      dockerfile: examples/multisig-trade-agent/Dockerfile
+    container_name: vibekit-multisig-trade-agent
+    env_file:
+      - path: .env
+        required: true
+      - path: examples/multisig-trade-agent/.env
+        required: false
+    ports:
+      - 3011:3011
+    restart: unless-stopped
+    depends_on:
+      - swapping-agent-no-wallet
+
   # langgraph-workflow-agent:
   #   build:
   #     context: ./
