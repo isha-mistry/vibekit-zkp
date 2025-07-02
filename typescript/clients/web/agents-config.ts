@@ -66,43 +66,43 @@ export const chatAgents = [
       },
     ],
   },
-  {
-    id: 'ember-multisig-trade' as const,
-    name: 'Multisig Trade',
-    description: 'Arbitrum Stylus multisig trading agent (Rust-based) for multi-signature swaps via Camelot DEX',
-    suggestedActions: [
-      {
-        title: 'Swap 100 USDC',
-        label: 'for ETH (multisig)',
-        action: 'Swap 100 USDC for ETH through multisig',
-      },
-      {
-        title: 'Initialize multisig',
-        label: 'with 2 confirmations',
-        action: 'Initialize multisig with 2 confirmations required',
-      },
-      {
-        title: 'Submit transaction',
-        label: 'to multisig',
-        action: 'Submit a transaction to the multisig',
-      },
-      {
-        title: 'Confirm transaction',
-        label: 'index 0',
-        action: 'Confirm transaction 0',
-      },
-      {
-        title: 'Execute transaction',
-        label: 'index 0',
-        action: 'Execute transaction 0',
-      },
-      {
-        title: 'Check if owner',
-        label: 'of multisig',
-        action: 'Check if I am an owner of the multisig',
-      },
-    ],
-  },
+  // {
+  //   id: 'ember-multisig-trade' as const,
+  //   name: 'Multisig Trade',
+  //   description: 'Arbitrum Stylus multisig trading agent (Rust-based) for multi-signature swaps via Camelot DEX',
+  //   suggestedActions: [
+  //     {
+  //       title: 'Swap 100 USDC',
+  //       label: 'for ETH (multisig)',
+  //       action: 'Swap 100 USDC for ETH through multisig',
+  //     },
+  //     {
+  //       title: 'Initialize multisig',
+  //       label: 'with 2 confirmations',
+  //       action: 'Initialize multisig with 2 confirmations required',
+  //     },
+  //     {
+  //       title: 'Submit transaction',
+  //       label: 'to multisig',
+  //       action: 'Submit a transaction to the multisig',
+  //     },
+  //     {
+  //       title: 'Confirm transaction',
+  //       label: 'index 0',
+  //       action: 'Confirm transaction 0',
+  //     },
+  //     {
+  //       title: 'Execute transaction',
+  //       label: 'index 0',
+  //       action: 'Execute transaction 0',
+  //     },
+  //     {
+  //       title: 'Check if owner',
+  //       label: 'of multisig',
+  //       action: 'Check if I am an owner of the multisig',
+  //     },
+  //   ],
+  // },
   // {
   //   id: 'langgraph-workflow' as const,
   //   name: 'Greeting Optimizer',
@@ -199,7 +199,7 @@ export const chatAgents = [
       },
       {
         title: 'What can Ember AI',
-        label: 'help me with?',
+        label: 'help me with?', 
         action: 'What can Ember AI help me with?',
       },
     ],
@@ -210,7 +210,7 @@ export const DEFAULT_SERVER_URLS = new Map<ChatAgentId, string>([
   ['ember-aave', 'http://lending-agent-no-wallet:3001/sse'],
   ['ember-camelot', 'http://swapping-agent-no-wallet:3005/sse'],
   ['ember-counter', 'http://counter-agent-no-wallet:3010/sse'],
-  ['ember-multisig-trade', 'http://multisig-trade-agent:3011/sse'],
+  // ['ember-multisig-trade', 'http://multisig-trade-agent:3011/sse'],
   // ['langgraph-workflow', 'http://langgraph-workflow-agent:3009/sse'],
   // ['quickstart-agent-template', 'http://quickstart-agent-template:3007/sse'],
   // ['allora-price-prediction-agent', 'http://allora-price-prediction-agent:3008/sse'],

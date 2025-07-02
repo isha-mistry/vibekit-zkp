@@ -48,20 +48,20 @@ export function Counter({
     return (
       <div className="flex flex-col gap-2 p-8 bg-transparent shadow-md rounded-2xl text-white border-blue-200 border-2">
         <h2 className="text-lg font-semibold mb-4">Counter Status:</h2>
-                  <div className="rounded-xl bg-zinc-700 p-4 flex flex-col gap-2">
-            <span className="font-normal flex gap-3 w-full items-center text-sm">
-              Operation: {txPreview.operation?.toUpperCase()}
-            </span>
-            <p className="font-normal w-full">
-              <span className="font-normal">
-                <span className="font-semibold">
-                  Current Value: {txPreview.currentValue}
+        <div className="rounded-xl bg-zinc-700 p-4 flex flex-col gap-2">
+          <span className="font-normal flex gap-3 w-full items-center text-sm">
+            Operation: {txPreview.operation?.toUpperCase()}
+          </span>
+          <p className="font-normal w-full">
+            <span className="font-normal">
+              <span className="font-semibold">
+                Current Value: {txPreview.currentValue}
+              </span>
+              {txPreview.expectedNewValue && (
+                <span className="text-green-400">
+                  {" → "} {txPreview.expectedNewValue}
                 </span>
-                {txPreview.expectedNewValue && (
-                  <span className="text-green-400">
-                    {" → "} {txPreview.expectedNewValue}
-                  </span>
-                )}
+              )}
                 {txPreview.multiplier && (
                   <span className="text-blue-400">
                     {" × "} {txPreview.multiplier}
@@ -77,14 +77,14 @@ export function Counter({
                     {" + "} {txPreview.ethValue} ETH
                   </span>
                 )}
-              </span>
-            </p>
-            <p className="font-normal w-full bg-zinc-600 rounded-full p-2">
-              <span className="font-normal text-sm">
-                Contract: {txPreview.contractAddress}
-              </span>
-            </p>
-          </div>
+            </span>
+          </p>
+          <p className="font-normal w-full bg-zinc-600 rounded-full p-2">
+            <span className="font-normal text-sm">
+              Contract: {txPreview.contractAddress}
+            </span>
+          </p>
+        </div>
       </div>
     );
   }

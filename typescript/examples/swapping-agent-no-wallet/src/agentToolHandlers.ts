@@ -477,7 +477,7 @@ ${camelotContextContent}`;
 
     log('Calling OpenRouter model...');
     const { textStream } = await streamText({
-      model: openrouter('deepseek/deepseek-chat-v3-0324:free	'),
+      model: openrouter('deepseek/deepseek-chat-v3-0324:free'),
       system: systemPrompt,
       prompt: question,
     });

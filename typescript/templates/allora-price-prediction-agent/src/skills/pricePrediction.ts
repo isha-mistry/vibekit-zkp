@@ -41,7 +41,7 @@ export const pricePredictionSkill = defineSkill({
       env: {
         ALLORA_API_KEY: process.env.ALLORA_API_KEY || '',
         // Use a different port for the STDIO-spawned Allora MCP server to avoid conflicts
-        PORT: process.env.ALLORA_MCP_PORT || '3009', // Different from Docker Compose's 3001
+        PORT: process.env.ALLORA_MCP_PORT || '3009', // Different from Docker Compose's 
       },
     },
   ],

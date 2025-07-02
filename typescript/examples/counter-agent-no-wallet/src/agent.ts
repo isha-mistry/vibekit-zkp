@@ -130,7 +130,7 @@ export class CounterAgent {
     
     if (setMatch && setMatch[1]) {
       const value = parseInt(setMatch[1]);
-      return { type: 'set', value };
+        return { type: 'set', value };
     }
 
     // Check for increment operations

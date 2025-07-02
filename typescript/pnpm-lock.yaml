@@ -275,6 +275,67 @@ importers:
         specifier: ^4.6.2
         version: 4.20.1
 
+  examples/multisig-trade-agent:
+    dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.5.0
+        version: 1.13.0
+      '@openrouter/ai-sdk-provider':
+        specifier: ^0.0.5
+        version: 0.0.5(zod@3.25.61)
+      '@openzeppelin/contracts':
+        specifier: ^5.1.0
+        version: 5.3.0
+      a2a-samples-js:
+        specifier: workspace:*
+        version: file:lib/a2a(ws@8.18.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.25.61)
+      ai:
+        specifier: ^4.0.29
+        version: 4.3.16(react@19.1.0)(zod@3.25.61)
+      arbitrum-vibekit-core:
+        specifier: workspace:*
+        version: file:lib/arbitrum-vibekit-core(react@19.1.0)(zod@3.25.61)
+      cors:
+        specifier: ^2.8.5
+        version: 2.8.5
+      dotenv:
+        specifier: ^16.3.1
+        version: 16.5.0
+      ember-schemas:
+        specifier: workspace:*
+        version: link:../../lib/ember-schemas
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
+      viem:
+        specifier: ^2.26.3
+        version: 2.31.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.61)
+      zod:
+        specifier: ^3.24.3
+        version: 3.25.61
+    devDependencies:
+      '@types/cors':
+        specifier: ^2.8.17
+        version: 2.8.19
+      '@types/express':
+        specifier: ^5.0.0
+        version: 5.0.3
+      '@types/node':
+        specifier: ^20.10.0
+        version: 20.19.0
+      prettier:
+        specifier: ^3.5.3
+        version: 3.5.3
+      tsx:
+        specifier: ^4.6.2
+        version: 4.20.3
+      typescript:
+        specifier: ^5.3.0
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.1
+        version: 3.2.3(@types/debug@4.1.12)(@types/node@20.19.0)(@vitest/ui@3.2.3)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
+
   examples/pendle-agent:
     dependencies:
       '@modelcontextprotocol/sdk':
@@ -832,64 +893,6 @@ importers:
         specifier: ^3.2.1
         version: 3.2.3(@types/debug@4.1.12)(@types/node@20.19.0)(@vitest/ui@3.2.3)(jiti@1.21.7)(tsx@4.20.1)(yaml@2.8.0)
 
-  templates/counter-agent:
-    dependencies:
-      '@google-a2a/types':
-        specifier: github:google-a2a/A2A#path:types
-        version: types@git+https://github.com/google-a2a/A2A.git#eb5499cd90947b40b936a064e14f1b9f6e8caab1&path:types
-      '@modelcontextprotocol/sdk':
-        specifier: ^1.5.0
-        version: 1.13.0
-      '@openrouter/ai-sdk-provider':
-        specifier: ^0.4.5
-        version: 0.4.6(zod@3.25.61)
-      ai:
-        specifier: ^4.3.2
-        version: 4.3.16(react@19.1.0)(zod@3.25.61)
-      arbitrum-vibekit-core:
-        specifier: workspace:*
-        version: file:lib/arbitrum-vibekit-core(react@19.1.0)(zod@3.25.61)
-      cors:
-        specifier: ^2.8.5
-        version: 2.8.5
-      dotenv:
-        specifier: ^16.3.1
-        version: 16.5.0
-      express:
-        specifier: ^4.21.2
-        version: 4.21.2
-      nanoid:
-        specifier: ^5.0.7
-        version: 5.1.5
-      viem:
-        specifier: ^2.21.45
-        version: 2.31.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.61)
-      zod:
-        specifier: ^3.24.3
-        version: 3.25.61
-    devDependencies:
-      '@types/cors':
-        specifier: ^2.8.17
-        version: 2.8.19
-      '@types/express':
-        specifier: ^5.0.0
-        version: 5.0.3
-      '@types/node':
-        specifier: ^20.10.0
-        version: 20.19.0
-      prettier:
-        specifier: ^3.5.3
-        version: 3.5.3
-      tsx:
-        specifier: ^4.6.2
-        version: 4.20.3
-      typescript:
-        specifier: ^5.3.0
-        version: 5.8.3
-      vitest:
-        specifier: ^3.2.1
-        version: 3.2.3(@types/debug@4.1.12)(@types/node@20.19.0)(@vitest/ui@3.2.3)(jiti@1.21.7)(tsx@4.20.3)(yaml@2.8.0)
-
   templates/langgraph-workflow-agent:
     dependencies:
       '@google-a2a/types':
@@ -1069,6 +1072,15 @@ packages:
     peerDependencies:
       zod: ^3.24.3
 
+  '@ai-sdk/provider-utils@1.0.2':
+    resolution: {integrity: sha512-57f6O4OFVNEpI8Z8o+K40tIB3YQiTw+VCql/qrAO9Utq7Ti1o6+X9tvm177DlZJL7ft0Rwzvgy48S9YhrEKgmA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.24.3
+    peerDependenciesMeta:
+      zod:
+        optional: true
+
   '@ai-sdk/provider-utils@2.1.10':
     resolution: {integrity: sha512-4GZ8GHjOFxePFzkl3q42AU0DQOtTQ5w09vmaWUf/pKFXJPizlnzKSUkF0f+VkapIUfDugyMqPMT1ge8XQzVI7Q==}
     engines: {node: '>=18'}
@@ -1083,6 +1095,10 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.24.3
+
+  '@ai-sdk/provider@0.0.12':
+    resolution: {integrity: sha512-oOwPQD8i2Ynpn22cur4sk26FW3mSy6t6/X/K1Ay2yGBKYiSpRyLfObhOrZEGsXDx+3euKy4nEZ193R36NM+tpQ==}
+    engines: {node: '>=18'}
 
   '@ai-sdk/provider@1.0.9':
     resolution: {integrity: sha512-jie6ZJT2ZR0uVOVCDc9R2xCX5I/Dum/wEK28lx21PJx6ZnFAN9EzD2WsPhcDWfCgGx3OAZZ0GyM3CEobXpa9LA==}
@@ -1632,6 +1648,12 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@openrouter/ai-sdk-provider@0.0.5':
+    resolution: {integrity: sha512-AfxXQhISpxQSeUjU/4jo9waM5GRNX6eIkfTFS9l7vHkD1TKDP81Y/dXrE0ttJeN/Kap3tPF3Jwh49me0gWwjSw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.24.3
 
   '@openrouter/ai-sdk-provider@0.4.6':
     resolution: {integrity: sha512-oUa8xtssyUhiKEU/aW662lsZ0HUvIUTRk8vVIF3Ha3KI/DnqX54zmVIuzYnaDpermqhy18CHqblAY4dDt1JW3g==}
@@ -2861,6 +2883,10 @@ packages:
   eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
 
+  eventsource-parser@1.1.2:
+    resolution: {integrity: sha512-v0eOBUbiaFojBu2s2NPBfYUoRR9GjcDNvCXVaqEf5vVfpIAh9f8RCo4vXTP8c63QRKCFwoLpMpTdPwwhEKVgzA==}
+    engines: {node: '>=14.18'}
+
   eventsource-parser@3.0.2:
     resolution: {integrity: sha512-6RxOBZ/cYgd8usLwsEl+EC09Au/9BcmCKYF2/xbml6DNczf7nv0MQb+7BA2F+li6//I+28VNlQR37XfQtcAJuA==}
     engines: {node: '>=18.0.0'}
@@ -3782,6 +3808,11 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanoid@3.3.6:
+    resolution: {integrity: sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
   nanoid@5.1.5:
     resolution: {integrity: sha512-Ir/+ZpE9fDsNH0hQ3C68uyThDXzYcim2EqcZ8zn8Chtt1iylPT9xXJB0kPCnqzgcEGikO9RxSrh63MsmVCU7Fw==}
     engines: {node: ^18 || >=20}
@@ -4540,10 +4571,6 @@ packages:
     resolution: {integrity: sha512-OZs6gsjF4vMp32qrCbiVSkrFmXtG/AZhY3t0iAMrMBiAZyV9oALtXO8hsrHbMXF9x6L3grlFuwW2oAz7cav+Gw==}
     engines: {node: '>= 0.6'}
 
-  types@git+https://github.com/google-a2a/A2A.git#eb5499cd90947b40b936a064e14f1b9f6e8caab1&path:types:
-    resolution: {commit: eb5499cd90947b40b936a064e14f1b9f6e8caab1, path: types, repo: https://github.com/google-a2a/A2A.git, type: git}
-    version: 1.0.0
-
   types@https://codeload.github.com/google-a2a/A2A/tar.gz/c2dbd58e677b68d143ad7b0dff1121f8681a076e#path:types:
     resolution: {path: types, tarball: https://codeload.github.com/google-a2a/A2A/tar.gz/c2dbd58e677b68d143ad7b0dff1121f8681a076e}
     version: 1.0.0
@@ -4880,6 +4907,15 @@ snapshots:
       '@ai-sdk/provider-utils': 2.2.8(zod@3.25.61)
       zod: 3.25.61
 
+  '@ai-sdk/provider-utils@1.0.2(zod@3.25.61)':
+    dependencies:
+      '@ai-sdk/provider': 0.0.12
+      eventsource-parser: 1.1.2
+      nanoid: 3.3.6
+      secure-json-parse: 2.7.0
+    optionalDependencies:
+      zod: 3.25.61
+
   '@ai-sdk/provider-utils@2.1.10(zod@3.25.61)':
     dependencies:
       '@ai-sdk/provider': 1.0.9
@@ -4895,6 +4931,10 @@ snapshots:
       nanoid: 3.3.11
       secure-json-parse: 2.7.0
       zod: 3.25.61
+
+  '@ai-sdk/provider@0.0.12':
+    dependencies:
+      json-schema: 0.4.0
 
   '@ai-sdk/provider@1.0.9':
     dependencies:
@@ -5739,6 +5779,12 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
+
+  '@openrouter/ai-sdk-provider@0.0.5(zod@3.25.61)':
+    dependencies:
+      '@ai-sdk/provider': 0.0.12
+      '@ai-sdk/provider-utils': 1.0.2(zod@3.25.61)
+      zod: 3.25.61
 
   '@openrouter/ai-sdk-provider@0.4.6(zod@3.25.61)':
     dependencies:
@@ -7179,6 +7225,8 @@ snapshots:
 
   eventemitter3@5.0.1: {}
 
+  eventsource-parser@1.1.2: {}
+
   eventsource-parser@3.0.2: {}
 
   eventsource@3.0.7:
@@ -8290,6 +8338,8 @@ snapshots:
 
   nanoid@3.3.11: {}
 
+  nanoid@3.3.6: {}
+
   nanoid@5.1.5: {}
 
   nanomatch@1.2.13:
@@ -9129,13 +9179,6 @@ snapshots:
       content-type: 1.0.5
       media-typer: 1.1.0
       mime-types: 3.0.1
-
-  types@git+https://github.com/google-a2a/A2A.git#eb5499cd90947b40b936a064e14f1b9f6e8caab1&path:types:
-    dependencies:
-      typescript-json-schema: 0.65.1
-    transitivePeerDependencies:
-      - '@swc/core'
-      - '@swc/wasm'
 
   types@https://codeload.github.com/google-a2a/A2A/tar.gz/c2dbd58e677b68d143ad7b0dff1121f8681a076e#path:types:
     dependencies:

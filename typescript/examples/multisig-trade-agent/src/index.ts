@@ -13,7 +13,7 @@ const MultisigTradeAgentSchema = z.object({
   instruction: z
     .string()
     .describe(
-      "A natural-language instruction for multisig trade operations, e.g. 'Swap 100 USDC for ETH', 'Initialize multisig with 2 confirmations', 'Confirm transaction 0', 'Execute transaction 1'."
+      "A natural-language instruction for multisig operations, e.g. 'Initialize multisig with 2 confirmations', 'Submit transaction to 0x123...', 'Confirm transaction 0', 'Execute transaction 1', 'Check if I am an owner'."
     ),
   userAddress: z
     .string()
@@ -33,19 +33,24 @@ let agent: MultisigTradeAgent;
 const initializeAgent = async (): Promise<void> => {
   const rpcUrl = process.env.ARBITRUM_SEPOLIA_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc';
   const multisigContractAddress = process.env.MULTISIG_CONTRACT_ADDRESS;
-  const camelotMcpUrl = process.env.CAMELOT_MCP_URL || 'http://swapping-agent-no-wallet:3005/sse';
+  const quicknodeSubdomain = process.env.QUICKNODE_SUBDOMAIN;
+  const quicknodeApiKey = process.env.QUICKNODE_API_KEY;
   
   if (!multisigContractAddress) {
     throw new Error('MULTISIG_CONTRACT_ADDRESS must be set in the .env file.');
   }
+  
+  if (!quicknodeSubdomain || !quicknodeApiKey) {
+    throw new Error('QUICKNODE_SUBDOMAIN and QUICKNODE_API_KEY must be set in the .env file for swap functionality.');
+  }
 
-  agent = new MultisigTradeAgent(rpcUrl, multisigContractAddress, camelotMcpUrl);
+  agent = new MultisigTradeAgent(rpcUrl, multisigContractAddress, quicknodeSubdomain, quicknodeApiKey);
   await agent.init();
 };
 
 const agentToolName = 'askMultisigTradeAgent';
 const agentToolDescription =
-  'Sends a free-form, natural-language instruction to this multisig trade AI agent for performing multi-signature swaps via Camelot DEX and managing an Arbitrum Stylus multisig smart contract written in Rust. You can perform swaps that require multiple signatures, initialize the multisig, deposit ETH, confirm/execute/revoke transactions, and query multisig state. The agent returns structured responses with transaction details for write operations.';
+  'Sends a free-form, natural-language instruction to this multisig AI agent for managing an Arbitrum Stylus multisig smart contract written in Rust. You can initialize the multisig, submit transactions, confirm/execute transactions, check ownership status, and query multisig state. The agent returns structured responses with transaction details for write operations.';
 
 server.tool(
   agentToolName,
