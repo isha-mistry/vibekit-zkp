@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibekit AI Chatbot - External Website Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 60px 0;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 80px 0;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .feature-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .feature-card p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .demo-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .demo-section h2 {
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+        
+        .button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .integration-notice {
+            background: rgba(52, 211, 153, 0.2);
+            border: 1px solid rgba(52, 211, 153, 0.4);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>🚀 Your Website + Vibekit AI</h1>
+            <p>
+                This is an example of how the Vibekit AI chatbot integrates seamlessly into any website. 
+                The chatbot provides DeFi capabilities including lending, trading, and smart contract interactions.
+            </p>
+            <div class="integration-notice">
+                <strong>🎉 Chatbot Active!</strong> Look for the blue chat button in the bottom-right corner. 
+                Click it to interact with our DeFi agents.
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3>💰 Lending Operations</h3>
+                <p>Interact with AAVE protocol to deposit, withdraw, borrow, and repay assets directly from the chat.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>🔄 Token Trading</h3>
+                <p>Execute token swaps on Camelot DEX with intelligent routing and real-time price information.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>📊 Smart Contracts</h3>
+                <p>Interact with Arbitrum Stylus smart contracts including counter operations and more.</p>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🎮 Try These Commands</h2>
+            <p>Click the chatbot and try these example commands:</p>
+            
+            <button class="button" onclick="suggestCommand('What agents are available?')">
+                What agents are available?
+            </button>
+            
+            <button class="button" onclick="suggestCommand('Check my balance')">
+                Check my balance
+            </button>
+            
+            <button class="button" onclick="suggestCommand('Swap 100 USDC for ETH')">
+                Swap 100 USDC for ETH
+            </button>
+            
+            <button class="button" onclick="suggestCommand('Deposit WETH to AAVE')">
+                Deposit WETH to AAVE
+            </button>
+            
+            <button class="button" onclick="suggestCommand('Get current counter value')">
+                Get counter value
+            </button>
+        </div>
+
+        <div class="demo-section">
+            <h2>📋 Integration Code</h2>
+            <p>To add this chatbot to your website, simply include this code:</p>
+            
+            <div class="code-block">
+&lt;!-- Vibekit AI Chatbot Integration --&gt;
+&lt;script&gt;
+  window.VibikitChatbotConfig = {
+    position: 'bottom-right',
+    primaryColor: '#0ea5e9',
+    apiEndpoint: 'https://your-vibekit-domain.com',
+    enabledAgents: ['ember-aave', 'ember-camelot', 'ember-counter']
+  };
+&lt;/script&gt;
+&lt;script src="https://your-vibekit-domain.com/vibekit-chatbot.js"&gt;&lt;/script&gt;
+            </div>
+
+            <h3>🎨 Customization Options</h3>
+            <div class="code-block">
+window.VibikitChatbotConfig = {
+  position: 'bottom-left',           // top-left, top-right, bottom-left, bottom-right
+  primaryColor: '#7c3aed',          // Any hex color
+  borderRadius: '20px',             // CSS border-radius
+  zIndex: 10000,                    // CSS z-index
+  enabledAgents: ['ember-aave'],    // Specific agents only
+  apiEndpoint: 'https://api.example.com'
+};
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>⚙️ Chatbot Controls</h2>
+            <p>Programmatically control the chatbot:</p>
+            
+            <button class="button" onclick="window.VibikitChatbot?.openChat()">
+                Open Chatbot
+            </button>
+            
+            <button class="button" onclick="window.VibikitChatbot?.closeChat()">
+                Close Chatbot
+            </button>
+            
+            <button class="button" onclick="toggleCustomization()">
+                Toggle Position
+            </button>
+            
+            <button class="button" onclick="changeColor()">
+                Change Color
+            </button>
+        </div>
+
+        <div class="footer">
+            <p>
+                Powered by <strong>Vibekit AI</strong> - The future of DeFi interactions<br>
+                <small>This is a demonstration of external website integration</small>
+            </p>
+        </div>
+    </div>
+
+    <!-- Vibekit AI Chatbot -->
+    <script>
+        // Configuration for the chatbot
+        window.VibikitChatbotConfig = {
+            position: 'bottom-right',
+            primaryColor: '#0ea5e9',
+            apiEndpoint: 'http://localhost:3000', // Change to your hosted domain
+            enabledAgents: ['ember-aave', 'ember-camelot', 'ember-counter'],
+            borderRadius: '12px',
+            zIndex: 9999
+        };
+
+        // Demo functions
+        function suggestCommand(command) {
+            if (window.VibikitChatbot) {
+                window.VibikitChatbot.openChat();
+                // You would implement a way to pre-fill the input here
+                setTimeout(() => {
+                    alert(`Try typing: "${command}" in the chatbot!`);
+                }, 500);
+            } else {
+                alert('Chatbot not loaded yet. Please wait a moment.');
+            }
+        }
+
+        let currentPosition = 'bottom-right';
+        function toggleCustomization() {
+            const positions = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
+            const currentIndex = positions.indexOf(currentPosition);
+            currentPosition = positions[(currentIndex + 1) % positions.length];
+            
+            if (window.VibikitChatbot?.container) {
+                const container = window.VibikitChatbot.container;
+                const positionStyles = {
+                    'bottom-right': 'bottom: 20px; right: 20px; top: auto; left: auto;',
+                    'bottom-left': 'bottom: 20px; left: 20px; top: auto; right: auto;',
+                    'top-right': 'top: 20px; right: 20px; bottom: auto; left: auto;',
+                    'top-left': 'top: 20px; left: 20px; bottom: auto; right: auto;'
+                };
+                
+                // Reset all position styles
+                container.style.bottom = 'auto';
+                container.style.right = 'auto';
+                container.style.top = 'auto';
+                container.style.left = 'auto';
+                
+                // Apply new position
+                const styles = positionStyles[currentPosition].split(';');
+                styles.forEach(style => {
+                    const [property, value] = style.split(':').map(s => s.trim());
+                    if (property && value && value !== 'auto') {
+                        container.style[property] = value;
+                    }
+                });
+            }
+        }
+
+        const colors = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+        let colorIndex = 0;
+        function changeColor() {
+            colorIndex = (colorIndex + 1) % colors.length;
+            const newColor = colors[colorIndex];
+            
+            if (window.VibikitChatbot?.container) {
+                const button = window.VibikitChatbot.container.querySelector('button');
+                if (button) {
+                    button.style.backgroundColor = newColor;
+                }
+                
+                // Update chat window header if it exists
+                const header = window.VibikitChatbot.container.querySelector('div[style*="background-color"]');
+                if (header) {
+                    header.style.backgroundColor = newColor;
+                }
+            }
+        }
+
+        // Initialize chatbot when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Loading Vibekit Chatbot...');
+        });
+    </script>
+    
+    <!-- Load the actual chatbot script -->
+    <script src="/vibekit-chatbot.js"></script>
+</body>
+</html> 

@@ -162,3 +162,190 @@
 .suggestion-highlight {
   @apply bg-blue-200 hover:bg-blue-300 dark:hover:bg-blue-400/50 dark:text-blue-50 dark:bg-blue-500/40;
 }
+
+/* Chatbot Transaction Preview Styles */
+.chatbot-message-content {
+  width: 100%;
+}
+
+.transaction-preview-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.transaction-preview-wrapper .bg-transparent {
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  padding: 12px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  color: #374151 !important;
+}
+
+.transaction-preview-wrapper .text-white {
+  color: #374151 !important;
+}
+
+.transaction-preview-wrapper .bg-zinc-700 {
+  background: #f9fafb !important;
+  color: #374151 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.transaction-preview-wrapper .border-red-200 {
+  border-color: #e5e7eb !important;
+}
+
+.transaction-preview-wrapper button {
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+}
+
+.transaction-preview-wrapper .mt-4 {
+  margin-top: 8px !important;
+}
+
+.transaction-preview-wrapper .gap-3 {
+  gap: 8px !important;
+}
+
+.transaction-preview-wrapper .p-8 {
+  padding: 12px !important;
+}
+
+.transaction-preview-wrapper .rounded-2xl {
+  border-radius: 8px !important;
+}
+
+/* Ensure transaction components render properly in chatbot */
+.transaction-preview .flex.flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Fix button visibility in chatbot */
+.transaction-preview-wrapper .bg-cyan-700 {
+  background-color: #0891b2 !important;
+  color: white !important;
+}
+
+.transaction-preview-wrapper .disabled\\:bg-zinc-600:disabled {
+  background-color: #71717a !important;
+  color: #d4d4d8 !important;
+}
+
+/* Enhanced Chatbot Widget Responsive Styles */
+.chatbot-widget {
+  font-family: system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
+
+.chatbot-widget .break-all {
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.chatbot-widget .break-words {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Ensure no horizontal scrollbars in chatbot */
+.chatbot-widget * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.chatbot-message-content {
+  width: 100%;
+  overflow: hidden;
+}
+
+.transaction-preview-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Enhanced transaction preview rendering in chatbot */
+.chatbot-widget .transaction-preview-wrapper .bg-gray-800 {
+  background: #1f2937 !important;
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  margin: 8px 0 !important;
+  overflow: hidden !important;
+}
+
+.chatbot-widget .transaction-preview-wrapper .bg-gray-700 {
+  background: #374151 !important;
+  color: white !important;
+  border-radius: 6px !important;
+  padding: 12px !important;
+  margin: 4px 0 !important;
+  overflow: hidden !important;
+}
+
+.chatbot-widget .transaction-preview-wrapper .text-gray-300 {
+  color: #d1d5db !important;
+}
+
+.chatbot-widget .transaction-preview-wrapper .text-gray-400 {
+  color: #9ca3af !important;
+  font-family: monospace !important;
+  font-size: 12px !important;
+  word-break: break-all !important;
+}
+
+.chatbot-widget .transaction-preview-wrapper button {
+  background: #2563eb !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  font-weight: 500 !important;
+  transition: background-color 0.2s ease !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+.chatbot-widget .transaction-preview-wrapper button:hover {
+  background: #1d4ed8 !important;
+}
+
+/* Responsive design for chatbot transaction previews */
+@media (max-width: 480px) {
+  .transaction-preview-wrapper {
+    font-size: 11px !important;
+  }
+  
+  .transaction-preview-wrapper button {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+  
+  .chatbot-widget .max-w-\[95\%\] {
+    max-width: 98% !important;
+  }
+  
+  .chatbot-widget .text-xs {
+    font-size: 10px !important;
+  }
+  
+  .chatbot-widget .font-mono {
+    font-size: 9px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .transaction-preview-wrapper {
+    font-size: 11px;
+  }
+  
+  .transaction-preview-wrapper button {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+}

@@ -180,116 +180,135 @@ export async function POST(request: Request) {
       walletAddress: validatedContext.walletAddress,
     });
 
+    console.log('🔍 [ROUTE] Getting language model for:', selectedChatModel);
+    console.log('🔍 [ROUTE] OpenRouter provider type:', typeof openRouterProvider);
+    console.log('🔍 [ROUTE] OpenRouter provider methods:', Object.keys(openRouterProvider));
+
+    // Map frontend model names to provider model IDs
+    const modelMapping: Record<string, string> = {
+      'deepseek/deepseek-chat-v3-0324:free': 'chat-model',
+      'chat-model': 'chat-model',
+      'chat-model-medium': 'chat-model-medium',
+    };
+    
+    const mappedModelId = modelMapping[selectedChatModel] || 'chat-model';
+    console.log('🔍 [ROUTE] Mapped model ID:', mappedModelId, 'from:', selectedChatModel);
+    
+    const model = openRouterProvider.languageModel(mappedModelId);
+    console.log('✅ [ROUTE] Language model retrieved successfully');
+    console.log('🔍 [ROUTE] Model details:', {
+      modelType: typeof model,
+      modelId: model?.modelId || 'undefined',
+      provider: model?.provider || 'undefined',
+    });
+
+    console.log('🔍 [ROUTE] Generating system prompt...');
+    const systemPromptText = systemPrompt({
+      selectedChatModel,
+      walletAddress: validatedContext.walletAddress,
+    });
+    console.log('✅ [ROUTE] System prompt generated, length:', systemPromptText.length);
+
+    console.log('🔍 [ROUTE] Starting streamText with:', {
+      modelType: typeof model,
+      messagesCount: messages.length,
+      toolsCount: Object.keys(dynamicTools).length,
+    });
+
+    const result = streamText({
+      model,
+      system: systemPromptText,
+      messages,
+      maxSteps: 20,
+      experimental_transform: smoothStream({ chunking: 'word' }),
+      experimental_generateMessageId: generateUUID,
+      tools: {
+        //getWeather,
+        //createDocument: createDocument({ session, dataStream }),
+        //updateDocument: updateDocument({ session, dataStream }),
+        //requestSuggestions: requestSuggestions({
+        //  session,
+        //  dataStream,
+        //}),
+        ...dynamicTools,
+      },
+      onFinish: async ({ response }) => {
+        console.log('🔍 [ROUTE] StreamText finished');
+        if (session.user?.id) {
+          try {
+            console.log('🔍 [ROUTE] Saving assistant response...');
+            const assistantId = getTrailingMessageId({
+              messages: response.messages.filter(message => message.role === 'assistant'),
+            });
+
+            if (!assistantId) {
+              throw new Error('No assistant message found!');
+            }
+
+            const [, assistantMessage] = appendResponseMessages({
+              messages: [userMessage],
+              responseMessages: response.messages,
+            });
+
+            await saveMessages({
+              messages: [
+                {
+                  id: assistantId,
+                  chatId: id,
+                  role: assistantMessage.role,
+                  parts: assistantMessage.parts,
+                  attachments: assistantMessage.experimental_attachments ?? [],
+                  createdAt: new Date(),
+                },
+              ],
+            });
+            console.log('✅ [ROUTE] Assistant response saved successfully');
+          } catch (saveError) {
+            console.error('❌ [ROUTE] Failed to save assistant response:', saveError);
+          }
+        }
+      },
+      experimental_telemetry: {
+        isEnabled: isProductionEnvironment,
+        functionId: 'stream-text',
+      },
+    });
+
+    console.log('✅ [ROUTE] StreamText created successfully');
+    
+    // Use robust streaming with error handling
     return createDataStreamResponse({
-      execute: dataStream => {
-        console.log('🔍 [ROUTE] Executing stream...');
-
+      execute: async (dataStream: any) => {
         try {
-          console.log('🔍 [ROUTE] Getting language model for:', selectedChatModel);
-          console.log('🔍 [ROUTE] OpenRouter provider type:', typeof openRouterProvider);
-          console.log('🔍 [ROUTE] OpenRouter provider methods:', Object.keys(openRouterProvider));
-
-          const model = openRouterProvider.languageModel(selectedChatModel);
-          console.log('✅ [ROUTE] Language model retrieved successfully');
-          console.log('🔍 [ROUTE] Model details:', {
-            modelType: typeof model,
-            modelId: model?.modelId || 'undefined',
-            provider: model?.provider || 'undefined',
-          });
-
-          console.log('🔍 [ROUTE] Generating system prompt...');
-          const systemPromptText = systemPrompt({
-            selectedChatModel,
-            walletAddress: validatedContext.walletAddress,
-          });
-          console.log('✅ [ROUTE] System prompt generated, length:', systemPromptText.length);
-
-          console.log('🔍 [ROUTE] Starting streamText with:', {
-            modelType: typeof model,
-            messagesCount: messages.length,
-            toolsCount: Object.keys(dynamicTools).length,
-          });
-
-          const result = streamText({
-            model,
-            system: systemPromptText,
-            messages,
-            maxSteps: 20,
-            experimental_transform: smoothStream({ chunking: 'word' }),
-            experimental_generateMessageId: generateUUID,
-            tools: {
-              //getWeather,
-              //createDocument: createDocument({ session, dataStream }),
-              //updateDocument: updateDocument({ session, dataStream }),
-              //requestSuggestions: requestSuggestions({
-              //  session,
-              //  dataStream,
-              //}),
-              ...dynamicTools,
-            },
-            onFinish: async ({ response }) => {
-              console.log('🔍 [ROUTE] StreamText finished');
-              if (session.user?.id) {
-                try {
-                  console.log('🔍 [ROUTE] Saving assistant response...');
-                  const assistantId = getTrailingMessageId({
-                    messages: response.messages.filter(message => message.role === 'assistant'),
-                  });
-
-                  if (!assistantId) {
-                    throw new Error('No assistant message found!');
-                  }
-
-                  const [, assistantMessage] = appendResponseMessages({
-                    messages: [userMessage],
-                    responseMessages: response.messages,
-                  });
-
-                  await saveMessages({
-                    messages: [
-                      {
-                        id: assistantId,
-                        chatId: id,
-                        role: assistantMessage.role,
-                        parts: assistantMessage.parts,
-                        attachments: assistantMessage.experimental_attachments ?? [],
-                        createdAt: new Date(),
-                      },
-                    ],
-                  });
-                  console.log('✅ [ROUTE] Assistant response saved successfully');
-                } catch (saveError) {
-                  console.error('❌ [ROUTE] Failed to save assistant response:', saveError);
-                }
-              }
-            },
-            experimental_telemetry: {
-              isEnabled: isProductionEnvironment,
-              functionId: 'stream-text',
-            },
-          });
-
-          console.log('✅ [ROUTE] StreamText created successfully');
-
-          result.mergeIntoDataStream(dataStream, {
-            sendReasoning: true,
-          });
-
-          console.log('✅ [ROUTE] Result merged into data stream');
-        } catch (streamError) {
-          console.error('❌ [ROUTE] Error in stream execution:', streamError);
-          console.error('❌ [ROUTE] Stream error details:', {
+          console.log('🔍 [ROUTE] Starting data stream execution...');
+          result.mergeIntoDataStream(dataStream);
+          console.log('✅ [ROUTE] Data stream merged successfully');
+        } catch (streamError: unknown) {
+          console.error('❌ [ROUTE] DataStream merge error:', streamError);
+          console.error('❌ [ROUTE] DataStream error details:', {
             name: streamError instanceof Error ? streamError.name : 'Unknown',
             message: streamError instanceof Error ? streamError.message : String(streamError),
             stack: streamError instanceof Error ? streamError.stack : undefined,
           });
-          throw streamError;
+          
+          // Try alternative streaming approach if available
+          if (typeof result.pipeDataStreamToResponse === 'function') {
+            try {
+              console.log('🔍 [ROUTE] Attempting alternative streaming...');
+              await result.pipeDataStreamToResponse(dataStream);
+              console.log('✅ [ROUTE] Alternative streaming successful');
+            } catch (altError: unknown) {
+              console.error('❌ [ROUTE] Alternative streaming failed:', altError);
+              const streamErrMsg = streamError instanceof Error ? streamError.message : String(streamError);
+              const altErrMsg = altError instanceof Error ? altError.message : String(altError);
+              throw new Error(`Both streaming methods failed: ${streamErrMsg} | ${altErrMsg}`);
+            }
+          } else {
+            console.error('❌ [ROUTE] No alternative streaming method available');
+            throw streamError;
+          }
         }
-      },
-      onError: (error: unknown) => {
-        console.error('❌ [ROUTE] DataStream error:', error);
-        return `${error}`;
-      },
+      }
     });
   } catch (error) {
     console.error('❌ [ROUTE] Main POST error:', error);

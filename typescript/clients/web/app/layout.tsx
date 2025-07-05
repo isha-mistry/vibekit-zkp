@@ -3,6 +3,7 @@ import { ProviderWrapper } from '@/components/provider-wrapper';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ChatbotIntegration } from '@/components/chatbot/ChatbotIntegration';
 
 import './globals.css';
 import { auth } from './(auth)/auth';
@@ -85,7 +86,14 @@ export default async function RootLayout({
         >
           <Toaster position="top-center" />
           <SessionProvider session={session}>
-            <ProviderWrapper>{children}</ProviderWrapper>
+            <ProviderWrapper>
+              {children}
+              <ChatbotIntegration 
+                position="bottom-right"
+                primaryColor="#0ea5e9"
+                zIndex={9999}
+              />
+            </ProviderWrapper>
           </SessionProvider>
         </ThemeProvider>
       </body>
