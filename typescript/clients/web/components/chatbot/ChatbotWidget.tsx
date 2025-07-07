@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
@@ -8,7 +7,10 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { X, MessageCircle, Send, Bot, Wallet, Edit2, Check, XCircle } from 'lucide-react';
 import { chatAgents, DEFAULT_SERVER_URLS } from '../../agents-config';
 import { generateUUID } from '@/lib/utils';
+import { saveChatAgentAsCookie } from '@/app/(chat)/actions';
 import { MessageRenderer } from '../message.renderer';
+import { TransactionPreview } from './TransactionPreview';
+import { Markdown } from '../markdown';
 import type { UIMessage } from 'ai';
 
 // Global CSS fix for chatbot transaction previews and text visibility
@@ -47,6 +49,47 @@ const chatbotStyles = `
   .chatbot-widget .transaction-preview-wrapper .text-white {
     color: white !important;
   }
+  .chatbot-widget .transaction-preview {
+    overflow-wrap: break-word !important;
+    word-break: break-all !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .chatbot-widget .transaction-preview .bg-zinc-700 {
+    overflow-wrap: break-word !important;
+    word-break: break-all !important;
+    white-space: pre-wrap !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .chatbot-widget .transaction-preview * {
+    overflow-wrap: break-word !important;
+    word-break: break-all !important;
+    max-width: 100% !important;
+  }
+  .chatbot-widget .bg-zinc-700 {
+    overflow-wrap: break-word !important;
+    word-break: break-all !important;
+    white-space: pre-wrap !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .chatbot-widget .chatbot-transaction-address {
+    overflow-wrap: break-word !important;
+    word-break: break-all !important;
+    font-family: monospace !important;
+    font-size: 0.75rem !important;
+    background: #f3f4f6 !important;
+    padding: 0.25rem !important;
+    border-radius: 0.25rem !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  .chatbot-transaction-preview * {
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-break: break-all !important;
+  }
 `;
 
 interface ChatbotWidgetProps {
@@ -65,10 +108,11 @@ export function ChatbotWidget({
   enabledAgents = ['ember-aave', 'ember-camelot', 'ember-counter']
 }: ChatbotWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<string>('all');
+  const [selectedAgent, setSelectedAgent] = useState<string>('ember-counter');
   const [showAgentSelector, setShowAgentSelector] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -97,7 +141,12 @@ export function ChatbotWidget({
     sendExtraMessageFields: true,
     generateId: generateUUID,
     onError: () => {
-      console.error('Chatbot error occurred');
+      console.error('🚨 [CHATBOT] Chat error occurred');
+      setIsSubmitting(false);
+    },
+    onFinish: () => {
+      console.log('✅ [CHATBOT] Chat finished successfully');
+      setIsSubmitting(false);
     },
   });
 
@@ -122,6 +171,29 @@ export function ChatbotWidget({
     }
   }, [isOpen]);
 
+  // Set the initial agent cookie when component mounts
+  useEffect(() => {
+    // Force set the agent cookie immediately
+    console.log('🎯 [CHATBOT] Setting agent cookie to:', selectedAgent);
+    saveChatAgentAsCookie(selectedAgent);
+    
+    // Also save it with a small delay to ensure it takes effect
+    setTimeout(() => {
+      console.log('🎯 [CHATBOT] Re-setting agent cookie to:', selectedAgent);
+      saveChatAgentAsCookie(selectedAgent);
+    }, 100);
+  }, []);
+
+  // Clear submitting state when assistant starts responding
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'assistant' && lastMessage.content) {
+        setIsSubmitting(false);
+      }
+    }
+  }, [messages]);
+
   const handleSuggestedAction = (action: string) => {
     const syntheticEvent = {
       preventDefault: () => {},
@@ -132,6 +204,9 @@ export function ChatbotWidget({
     if (inputElement) {
       inputElement.value = action;
       handleInputChange({ target: { value: action } } as React.ChangeEvent<HTMLInputElement>);
+      
+      // Set submitting state immediately
+      setIsSubmitting(true);
       
       // Submit with a slight delay to ensure state updates
       setTimeout(() => {
@@ -175,6 +250,11 @@ export function ChatbotWidget({
     setEditingText('');
   };
 
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    setIsSubmitting(true);
+    handleSubmit(e);
+  };
+
   const selectedAgentData = availableAgents.find(agent => agent.id === selectedAgent);
 
   // Inject custom styles for transaction previews
@@ -213,10 +293,8 @@ export function ChatbotWidget({
       {/* Chat Window */}
       {isOpen && (
         <div 
-          className="bg-white shadow-2xl border border-gray-200 flex flex-col"
+          className="bg-white shadow-2xl border border-gray-200 flex flex-col chatbot-container"
           style={{
-            width: '380px',
-            height: '600px',
             borderRadius: borderRadius,
           }}
         >
@@ -283,10 +361,17 @@ export function ChatbotWidget({
                 {availableAgents.map((agent) => (
                   <button
                     key={agent.id}
-                    onClick={() => {
-                      setSelectedAgent(agent.id);
-                      setShowAgentSelector(false);
-                    }}
+                                          onClick={() => {
+                        console.log('🎯 [CHATBOT] User selected agent:', agent.id);
+                        setSelectedAgent(agent.id);
+                        setShowAgentSelector(false);
+                        saveChatAgentAsCookie(agent.id);
+                        // Force immediate cookie setting
+                        setTimeout(() => {
+                          console.log('🎯 [CHATBOT] Re-confirming agent cookie:', agent.id);
+                          saveChatAgentAsCookie(agent.id);
+                        }, 50);
+                      }}
                     className={`w-full text-left p-2 rounded text-sm transition-colors ${
                       selectedAgent === agent.id
                         ? 'text-white'
@@ -438,7 +523,18 @@ export function ChatbotWidget({
                       <div className="flex justify-start">
                         <div className="max-w-[95%] w-full bg-white rounded-lg p-3 shadow-sm border">
                           <div className="flex items-start gap-2 mb-2">
-                            <Bot className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                            {/* Single bot icon - show loading animation only for the current loading message */}
+                            {(index === messages.length - 1 && (isLoading || isSubmitting)) ? (
+                              <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                                <div className="flex space-x-1">
+                                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce"></div>
+                                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                </div>
+                              </div>
+                            ) : (
+                              <Bot className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                            )}
                             <div className="text-gray-800 flex-1 w-full overflow-hidden min-w-0">
                               {message.parts?.map((part, partIndex) => {
                                 console.log('🔍 [CHATBOT] Processing message part:', { 
@@ -468,50 +564,17 @@ export function ChatbotWidget({
                                           <div key={partIndex} className="w-full">
                                             <div className="w-full max-w-full overflow-hidden">
                                               {/* Show user-friendly message */}
-                                              <div className="text-gray-800 text-sm leading-relaxed mb-3">
-                                                {toolResult.status?.message?.parts?.[0]?.text || 'Transaction plan ready'}
+                                              <div className="text-gray-800 text-sm leading-relaxed mb-3 chatbot-markdown">
+                                                <Markdown>{toolResult.status?.message?.parts?.[0]?.text || 'Transaction plan ready'}</Markdown>
                                               </div>
                                               
-                                              {/* Transaction Preview Card */}
-                                              <div className="bg-gray-800 rounded-lg p-4 text-white w-full overflow-hidden">
-                                                <h3 className="font-semibold text-white mb-3">Transaction Preview:</h3>
-                                                
-                                                {txPreview && (
-                                                  <div className="space-y-3 mb-4">
-                                                    <div className="bg-gray-700 rounded-lg p-3">
-                                                      <div className="text-sm font-medium text-gray-300 mb-1">From:</div>
-                                                      <div className="text-sm text-white">
-                                                        {txPreview.fromTokenAmount} {txPreview.fromTokenSymbol} (on {txPreview.fromChain})
-                                                      </div>
-                                                      <div className="text-xs text-gray-400 font-mono mt-1 break-all">
-                                                        {txPreview.fromTokenAddress}
-                                                      </div>
-                                                    </div>
-                                                    
-                                                    <div className="bg-gray-700 rounded-lg p-3">
-                                                      <div className="text-sm font-medium text-gray-300 mb-1">To:</div>
-                                                      <div className="text-sm text-white">
-                                                        {txPreview.toTokenAmount} {txPreview.toTokenSymbol} (on {txPreview.toChain})
-                                                      </div>
-                                                      <div className="text-xs text-gray-400 font-mono mt-1 break-all">
-                                                        {txPreview.toTokenAddress}
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                )}
-                                                
-                                                {txPlan && txPlan.length > 0 && (
-                                                  <button 
-                                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
-                                                    onClick={() => {
-                                                      console.log('🚀 [CHATBOT] Transaction plan:', txPlan);
-                                                      alert('Transaction signing would be initiated here. Check console for tx data.');
-                                                    }}
-                                                  >
-                                                    Sign Transaction
-                                                  </button>
-                                                )}
-                                              </div>
+                                                                            {/* Transaction Preview using the new component */}
+                              <TransactionPreview
+                                txPreview={txPreview}
+                                txPlan={txPlan}
+                                isLoading={false}
+                                className="w-full"
+                              />
                                             </div>
                                           </div>
                                         );
@@ -528,22 +591,31 @@ export function ChatbotWidget({
                                 return (
                                   <div key={partIndex} className="w-full overflow-hidden">
                                     {part.type === 'text' ? (
-                                      <div className="text-gray-800 text-sm leading-relaxed break-words">
-                                        {part.text}
+                                      <div className="text-gray-800 text-sm leading-relaxed break-words chatbot-markdown">
+                                        <Markdown>{part.text}</Markdown>
                                       </div>
                                     ) : (
                                       <div className="w-full overflow-hidden">
-                                        <MessageRenderer
-                                          key={partIndex}
-                                          message={message}
-                                          part={part}
-                                          isLoading={isLoading && index === messages.length - 1}
-                                          mode="view"
-                                          setMode={() => {}}
-                                          isReadonly={false}
-                                          setMessages={setMessages}
-                                          reload={reload}
-                                        />
+                                        {/* Only show MessageRenderer when not loading to prevent duplicate bot icons */}
+                                        {!(isLoading || isSubmitting) && partIndex === 0 && (
+                                          <MessageRenderer
+                                            key={partIndex}
+                                            message={message}
+                                            part={part}
+                                            isLoading={false}
+                                            mode="view"
+                                            setMode={() => {}}
+                                            isReadonly={false}
+                                            setMessages={setMessages}
+                                            reload={reload}
+                                          />
+                                        )}
+                                                                {/* Show loading text when this is the current loading message */}
+                        {(isLoading || isSubmitting) && index === messages.length - 1 && (
+                          <div className="text-gray-600 text-sm">
+                            Processing your request...
+                          </div>
+                        )}
                                       </div>
                                     )}
                                   </div>
@@ -556,15 +628,34 @@ export function ChatbotWidget({
                     )}
                   </div>
                 ))}
-                {isLoading && (
+                {/* Show loading state when submitting immediately after user sends message */}
+                {isSubmitting && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
                   <div className="flex justify-start">
                     <div className="bg-white p-3 rounded-lg shadow-sm border">
                       <div className="flex items-center gap-2">
-                        <Bot className="w-4 h-4 text-blue-500" />
+                        <div className="w-5 h-5 mt-0.5 flex-shrink-0 flex items-center justify-center">
+                          <div className="flex space-x-1">
+                            <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce"></div>
+                            <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          </div>
+                        </div>
+                        <div className="text-gray-600 text-sm">Processing your request...</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Only show loading state when there are no messages at all */}
+                {(isLoading || isSubmitting) && messages.length === 0 && (
+                  <div className="flex justify-start">
+                    <div className="bg-white p-3 rounded-lg shadow-sm border">
+                      <div className="flex items-center gap-2">
+                        <Bot className="w-5 h-5 text-blue-500" />
+                        <div className="text-gray-600 text-sm">{isSubmitting ? 'Processing your request...' : 'Thinking...'}</div>
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce"></div>
+                          <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                         </div>
                       </div>
                     </div>
@@ -577,18 +668,18 @@ export function ChatbotWidget({
 
           {/* Input Area */}
           <div className="border-t border-gray-200 p-4">
-            <form onSubmit={handleSubmit} className="flex gap-2">
+            <form onSubmit={handleFormSubmit} className="flex gap-2">
               <input
                 ref={inputRef}
                 value={input}
                 onChange={handleInputChange}
                 placeholder="Ask me anything about DeFi..."
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                disabled={isLoading}
+                disabled={isLoading || isSubmitting}
               />
               <button
                 type="submit"
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || isSubmitting || !input.trim()}
                 className="px-4 py-2 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
                 style={{ backgroundColor: primaryColor }}
               >

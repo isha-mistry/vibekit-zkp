@@ -66,7 +66,7 @@ export function Swaps({
   return (
     <>
       {txPlan && txPreview && (
-        <div className="flex flex-col gap-2 p-8 bg-transparent shadow-md rounded-2xl text-white border-red-200 border-2">
+        <div className="flex flex-col gap-2 p-8 bg-transparent shadow-md rounded-2xl text-green-500 border-red-200 border-2">
           <h2 className="text-lg font-semibold mb-4">Transaction Preview:</h2>
           <div className="rounded-xl bg-zinc-700 p-4 flex flex-col gap-2">
             <span className="font-normal flex gap-3 w-full items-center text-sm">

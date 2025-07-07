@@ -16,13 +16,8 @@ export interface ChatbotConfig {
 
 // Utility function to detect active agents based on environment
 export function getActiveAgents(): string[] {
-  // In development, detect from running services
-  if (process.env.NODE_ENV === 'development') {
-    return ['ember-aave', 'ember-camelot', 'ember-counter'];
-  }
-  
-  // In production, this could check actual service availability
-  return ['ember-aave', 'ember-camelot'];
+  // Return all agents that are defined in compose.yml and running
+  return ['ember-aave', 'ember-camelot', 'ember-counter'];
 }
 
 // Utility to create agent URL mappings for different environments
