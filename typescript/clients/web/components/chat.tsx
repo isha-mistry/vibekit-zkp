@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useAccount } from 'wagmi';
 import { useSession } from 'next-auth/react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { LocationVerifier } from './location-verifier';
 
 export function Chat({
   id,
@@ -37,6 +38,7 @@ export function Chat({
   const { data: session } = useSession();
 
   const [selectedChatAgent, _setSelectedChatAgent] = useState(initialChatAgent);
+  const [isLocationVerified, setIsLocationVerified] = useState(false);
 
   const { messages, setMessages, handleSubmit, input, setInput, append, status, stop, reload } =
     useChat({
@@ -68,6 +70,10 @@ export function Chat({
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector(state => state.isVisible);
 
+  const handleLocationVerificationSuccess = () => {
+    setIsLocationVerified(true);
+  };
+
   return (
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
@@ -79,6 +85,10 @@ export function Chat({
             </p>
             <ConnectButton />
           </div>
+        )}
+
+        {(session && session?.user && !isLocationVerified) && (
+          <LocationVerifier onVerificationSuccess={handleLocationVerificationSuccess} />
         )}
         <ChatHeader />
 
